@@ -53,6 +53,24 @@ public class Usuario {
         this.activo = false;
     }
 
+    public void activar() {
+        this.activo = true;
+    }
+
+    /**
+     * Devuelve una copia de este usuario con el id asignado por la persistencia
+     * (secuencia de Oracle). Los adaptadores de repositorio la usan justo después
+     * de insertar un usuario nuevo (que llega con id = 0, "sin persistir"),
+     * para devolver al caso de uso la entidad ya con su identidad real.
+     */
+    public Usuario conId(long nuevoId) {
+        Usuario copia = new Usuario(nuevoId, this.nombre, this.email, this.contrasenaHash, this.rol);
+        if (!this.activo) {
+            copia.desactivar();
+        }
+        return copia;
+    }
+
     public long getId() { return id; }
     public String getNombre() { return nombre; }
     public Email getEmail() { return email; }

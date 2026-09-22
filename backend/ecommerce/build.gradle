@@ -17,21 +17,36 @@ repositories {
 	mavenCentral()
 }
 
+ext {
+	jjwtVersion = '0.12.6'
+}
+
 dependencies {
-	// data-jpa y mariadb quedan comentadas: aun no hay entidades @Entity ni
-	// JpaRepository en el proyecto, y con ellas en el classpath Spring intenta
-	// crear un DataSource real (por eso fallaba bootRun). Descomentar cuando
-	// se conecte persistencia real con JPA/MariaDB.
-	// implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	// Persistencia real con JPA + Oracle (reemplaza el prototipo en memoria
+	// para el adaptador de produccion; UsuarioRepositoryEnMemoria se conserva
+	// solo como doble de pruebas de los casos de uso).
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.flywaydb:flyway-database-oracle'
+	// Spring Boot 4 modulariza spring-boot-autoconfigure: la integracion con
+	// Flyway (que antes venia incluida siempre) ahora es un artefacto aparte.
+	implementation 'org.springframework.boot:spring-boot-flyway'
+
+	// JWT (puerto TokenProvider / adaptador JwtTokenProvider).
+	implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
+
+	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+
 	compileOnly 'org.projectlombok:lombok'
-	// runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 	annotationProcessor 'org.projectlombok:lombok'
-	// testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.springframework.security:spring-security-test'
 	testCompileOnly 'org.projectlombok:lombok'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testAnnotationProcessor 'org.projectlombok:lombok'

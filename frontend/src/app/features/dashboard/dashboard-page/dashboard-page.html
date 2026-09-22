@@ -1,0 +1,18 @@
+<header class="barra-superior">
+  <h1>Lovely Girl</h1>
+  <button type="button" class="btn btn-secundario" (click)="cerrarSesion()">Cerrar sesión</button>
+</header>
+
+<main class="contenido">
+  @if (usuario(); as datos) {
+    <section class="tarjeta-bienvenida">
+      <h2>¡Hola, {{ datos.nombre }}! 👋</h2>
+      <p class="rol-actual">Rol: <strong>{{ etiquetasRol[datos.rol] }}</strong></p>
+      <p class="correo">{{ datos.email }}</p>
+
+      @if (esAdministradora()) {
+        <a routerLink="/admin/usuarios" class="btn btn-primary enlace-admin">Gestionar usuarios</a>
+      }
+    </section>
+  }
+</main>
