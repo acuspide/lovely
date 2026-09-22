@@ -2,12 +2,20 @@ package com.example.ecommerce.infrastructure.config;
 
 import com.example.ecommerce.application.PasswordHasher;
 import com.example.ecommerce.application.TokenProvider;
+import com.example.ecommerce.application.usecase.ActualizarArticuloUseCase;
 import com.example.ecommerce.application.usecase.AutenticarUsuarioUseCase;
 import com.example.ecommerce.application.usecase.CambiarEstadoUsuarioUseCase;
+import com.example.ecommerce.application.usecase.CrearArticuloUseCase;
+import com.example.ecommerce.application.usecase.EliminarArticuloUseCase;
 import com.example.ecommerce.application.usecase.IniciarSesionUseCase;
+import com.example.ecommerce.application.usecase.ListarArticulosUseCase;
 import com.example.ecommerce.application.usecase.ListarUsuariosUseCase;
+import com.example.ecommerce.application.usecase.ObtenerArticuloUseCase;
 import com.example.ecommerce.application.usecase.RegistrarUsuarioUseCase;
+import com.example.ecommerce.domain.repository.ArticuloRepository;
+import com.example.ecommerce.domain.repository.PedidoRepository;
 import com.example.ecommerce.domain.repository.UsuarioRepository;
+import com.example.ecommerce.infrastructure.persistence.PedidoRepositoryEnMemoria;
 import com.example.ecommerce.infrastructure.security.BCryptPasswordHasher;
 import com.example.ecommerce.infrastructure.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,5 +73,42 @@ public class AppConfig {
     @Bean
     public CambiarEstadoUsuarioUseCase cambiarEstadoUsuarioUseCase(UsuarioRepository usuarioRepository) {
         return new CambiarEstadoUsuarioUseCase(usuarioRepository);
+    }
+
+    /**
+     * F-02 usa PedidoRepository solo para la verificación de solo lectura de
+     * RN17 (¿tiene pedidos activos?). El feature "Realizar Pedido" (con su
+     * propio adaptador Oracle) todavía no existe, así que por ahora el único
+     * adaptador es este de memoria — intencional, no un descuido.
+     */
+    @Bean
+    public PedidoRepository pedidoRepository() {
+        return new PedidoRepositoryEnMemoria();
+    }
+
+    @Bean
+    public CrearArticuloUseCase crearArticuloUseCase(ArticuloRepository articuloRepository) {
+        return new CrearArticuloUseCase(articuloRepository);
+    }
+
+    @Bean
+    public ActualizarArticuloUseCase actualizarArticuloUseCase(ArticuloRepository articuloRepository) {
+        return new ActualizarArticuloUseCase(articuloRepository);
+    }
+
+    @Bean
+    public EliminarArticuloUseCase eliminarArticuloUseCase(ArticuloRepository articuloRepository,
+                                                             PedidoRepository pedidoRepository) {
+        return new EliminarArticuloUseCase(articuloRepository, pedidoRepository);
+    }
+
+    @Bean
+    public ListarArticulosUseCase listarArticulosUseCase(ArticuloRepository articuloRepository) {
+        return new ListarArticulosUseCase(articuloRepository);
+    }
+
+    @Bean
+    public ObtenerArticuloUseCase obtenerArticuloUseCase(ArticuloRepository articuloRepository) {
+        return new ObtenerArticuloUseCase(articuloRepository);
     }
 }

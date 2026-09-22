@@ -1,7 +1,10 @@
 package com.example.ecommerce.infrastructure.web.rest;
 
+import com.example.ecommerce.domain.exception.ArticuloConPedidosActivosException;
+import com.example.ecommerce.domain.exception.ArticuloNoEncontradoException;
 import com.example.ecommerce.domain.exception.CorreoElectronicoDuplicadoException;
 import com.example.ecommerce.domain.exception.CredencialesInvalidasException;
+import com.example.ecommerce.domain.exception.NombreArticuloDuplicadoException;
 import com.example.ecommerce.domain.exception.ReglaDominioException;
 import com.example.ecommerce.domain.exception.TokenInvalidoException;
 import com.example.ecommerce.domain.exception.UsuarioInactivoException;
@@ -12,6 +15,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
  * Centraliza la traducción de excepciones de dominio a respuestas HTTP
@@ -51,6 +55,22 @@ public class GlobalExceptionHandler {
         return problema(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
+    @ExceptionHandler(ArticuloNoEncontradoException.class)
+    public ProblemDetail articuloNoEncontrado(ArticuloNoEncontradoException ex) {
+        return problema(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(NombreArticuloDuplicadoException.class)
+    public ProblemDetail nombreArticuloDuplicado(NombreArticuloDuplicadoException ex) {
+        return problema(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    // RN17: no se puede eliminar un producto con pedidos activos.
+    @ExceptionHandler(ArticuloConPedidosActivosException.class)
+    public ProblemDetail articuloConPedidosActivos(ArticuloConPedidosActivosException ex) {
+        return problema(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail datosInvalidos(MethodArgumentNotValidException ex) {
         String mensaje = ex.getBindingResult().getFieldErrors().stream()
@@ -58,6 +78,12 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getDefaultMessage())
                 .orElse("Datos inválidos.");
         return problema(HttpStatus.BAD_REQUEST, mensaje);
+    }
+
+    // p.ej. ?categoria=NO_EXISTE en GET /api/articulos.
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail parametroInvalido(MethodArgumentTypeMismatchException ex) {
+        return problema(HttpStatus.BAD_REQUEST, "El parámetro '" + ex.getName() + "' no tiene un valor válido.");
     }
 
     // Handler genérico: cualquier otra ReglaDominioException (contraseña

@@ -4,6 +4,7 @@ import com.example.ecommerce.application.TokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -42,6 +43,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Lecturas del catálogo (RF-03): públicas para que las clientas
+                        // naveguen sin sesión. Escrituras exigen @PreAuthorize ADMINISTRADORA
+                        // (ver ArticuloRestController), lo que ya requiere estar autenticado.
+                        .requestMatchers(HttpMethod.GET, "/api/articulos/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
                         // Sin estos handlers, Spring Security responde 403 tanto para

@@ -1,0 +1,66 @@
+<header class="barra-superior">
+  <h1>Lovely Girl</h1>
+
+  @if (authService.estaAutenticado()) {
+    <a routerLink="/dashboard" class="btn btn-secundario">Mi cuenta</a>
+  } @else {
+    <a routerLink="/login" class="btn btn-secundario">Iniciar sesión</a>
+  }
+</header>
+
+<main class="contenido">
+  <div class="filtros">
+    <div class="campo campo-buscador">
+      <label for="buscador">Buscar</label>
+      <input id="buscador" type="text" [formControl]="buscador" placeholder="Buscar por nombre…" />
+    </div>
+
+    <div class="categorias">
+      <button
+        type="button"
+        class="chip"
+        [class.chip-activo]="categoriaActiva() === null"
+        (click)="filtrarPorCategoria(null)"
+      >
+        Todas
+      </button>
+      @for (categoria of categorias; track categoria) {
+        <button
+          type="button"
+          class="chip"
+          [class.chip-activo]="categoriaActiva() === categoria"
+          (click)="filtrarPorCategoria(categoria)"
+        >
+          {{ etiquetasCategoria[categoria] }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <p>Cargando catálogo…</p>
+  } @else if (articulos().length === 0) {
+    <p class="sin-resultados">No se encontraron productos.</p>
+  } @else {
+    <div class="grilla-productos">
+      @for (articulo of articulos(); track articulo.id) {
+        <article class="tarjeta-producto">
+          <div class="imagen-wrapper">
+            <img [src]="articulo.imagenUrl" [alt]="articulo.nombre" />
+            @if (articulo.agotado) {
+              <span class="insignia-agotado">Agotado</span>
+            }
+          </div>
+          <div class="info-producto">
+            <span class="categoria-producto">{{ etiquetasCategoria[articulo.categoria] }}</span>
+            <h3>{{ articulo.nombre }}</h3>
+            @if (articulo.marca) {
+              <p class="marca-producto">{{ articulo.marca }}</p>
+            }
+            <p class="precio-producto">{{ articulo.precio | number: '1.0-0' }} COP</p>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</main>

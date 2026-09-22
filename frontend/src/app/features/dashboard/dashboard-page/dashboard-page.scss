@@ -32,8 +32,13 @@
   }
 }
 
-.enlace-admin {
-  align-self: flex-start;
+.acciones-dashboard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   margin-top: 1rem;
-  text-decoration: none;
+
+  a {
+    text-decoration: none;
+  }
 }

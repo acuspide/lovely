@@ -1,17 +1,18 @@
 package com.example.ecommerce.application.usecase;
 
-import com.example.ecommerce.domain.entity.*;
+import com.example.ecommerce.domain.entity.Articulo;
+import com.example.ecommerce.domain.entity.Carrito;
 import com.example.ecommerce.domain.exception.ReglaDominioException;
 import com.example.ecommerce.domain.repository.ArticuloRepository;
 import com.example.ecommerce.domain.repository.CarritoRepository;
-import com.example.ecommerce.domain.valueobject.*;
+import com.example.ecommerce.domain.valueobject.CategoriaArticulo;
+import com.example.ecommerce.domain.valueobject.NombreArticulo;
+import com.example.ecommerce.domain.valueobject.Precio;
 import com.example.ecommerce.infrastructure.persistence.ArticuloRepositoryEnMemoria;
 import com.example.ecommerce.infrastructure.persistence.CarritoRepositoryEnMemoria;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -22,18 +23,14 @@ public class AgregarAlCarritoUseCaseTest {
         Articulo articulo = new Articulo(
                 1L,
                 new NombreArticulo("Labial"),
+                "Labial de larga duración",
                 new Precio(new BigDecimal("20000")),
-                new Categoria(1L, "Labios"),
-                new Marca(1L, "Maybelline"),
-                Tono.OSCURO,
-                List.of(TipoPiel.NORMAL),
-                new Inventario(10),
-                new FechaVencimiento(LocalDate.of(2027, 12, 31)),
-                new Tienda(1L, "Tienda Beauty")
+                CategoriaArticulo.MAQUILLAJE,
+                "Maybelline",
+                "https://ejemplo.com/labial.jpg",
+                10
         );
-        articulo.publicar();
-        articuloRepository.guardar(articulo);
-        return articulo;
+        return articuloRepository.guardar(articulo);
     }
 
     @Test

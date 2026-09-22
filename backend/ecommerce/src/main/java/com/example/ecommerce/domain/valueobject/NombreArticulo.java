@@ -18,6 +18,11 @@ public class NombreArticulo {
             throw new NombreArticuloRequeridoException();
         }
     }
+
+    public String getValor() {
+        return valor;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
