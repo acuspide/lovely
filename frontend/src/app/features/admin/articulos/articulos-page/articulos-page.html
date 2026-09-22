@@ -1,0 +1,103 @@
+<header class="barra-superior">
+  <h1>Lovely Girl · Productos</h1>
+  <a routerLink="/dashboard" class="btn btn-secundario">Volver</a>
+</header>
+
+<main class="contenido">
+  <section class="tarjeta">
+    <h2>{{ editando() ? 'Editar producto' : 'Nuevo producto' }}</h2>
+
+    @if (error(); as mensaje) {
+      <div class="alerta alerta-error">{{ mensaje }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="guardar()" class="formulario-producto">
+      <div class="campo">
+        <label for="nombre">Nombre</label>
+        <input id="nombre" type="text" formControlName="nombre" />
+      </div>
+
+      <div class="campo">
+        <label for="categoria">Categoría</label>
+        <select id="categoria" formControlName="categoria">
+          @for (categoria of categorias; track categoria) {
+            <option [value]="categoria">{{ etiquetasCategoria[categoria] }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="marca">Marca (opcional)</label>
+        <input id="marca" type="text" formControlName="marca" />
+      </div>
+
+      <div class="campo">
+        <label for="precio">Precio (COP)</label>
+        <input id="precio" type="number" min="0.01" step="100" formControlName="precio" />
+      </div>
+
+      <div class="campo">
+        <label for="stock">Stock</label>
+        <input id="stock" type="number" min="0" formControlName="stock" />
+      </div>
+
+      <div class="campo campo-ancho">
+        <label for="imagenUrl">URL de la imagen</label>
+        <input id="imagenUrl" type="text" formControlName="imagenUrl" placeholder="https://…" />
+      </div>
+
+      <div class="campo campo-ancho">
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" rows="3" formControlName="descripcion"></textarea>
+      </div>
+
+      <div class="acciones-formulario">
+        <button type="submit" class="btn btn-primary" [disabled]="enviando()">
+          {{ enviando() ? 'Guardando…' : editando() ? 'Guardar cambios' : 'Crear producto' }}
+        </button>
+        @if (editando()) {
+          <button type="button" class="btn btn-secundario" (click)="cancelarEdicion()">Cancelar</button>
+        }
+      </div>
+    </form>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Catálogo</h2>
+
+    @if (cargando()) {
+      <p>Cargando productos…</p>
+    } @else {
+      <table class="tabla-productos">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (articulo of articulos(); track articulo.id) {
+            <tr>
+              <td>{{ articulo.nombre }}</td>
+              <td>{{ etiquetasCategoria[articulo.categoria] }}</td>
+              <td>{{ articulo.precio }} COP</td>
+              <td>
+                {{ articulo.stock }}
+                @if (articulo.agotado) {
+                  <span class="insignia-agotado">Agotado</span>
+                }
+              </td>
+              <td class="acciones-fila">
+                <button type="button" class="btn btn-secundario" (click)="editar(articulo)">Editar</button>
+                <button type="button" class="btn btn-secundario btn-peligro" (click)="eliminar(articulo)">Eliminar</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+</main>
