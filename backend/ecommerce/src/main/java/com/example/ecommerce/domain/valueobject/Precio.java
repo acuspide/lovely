@@ -14,8 +14,8 @@ public class Precio {
     }
 
     private void validarPrecio(BigDecimal valor) {
-
-        if (valor == null || valor.compareTo(BigDecimal.ZERO) < 0) {
+        // RN18: el precio debe ser mayor a cero (no solo no-negativo).
+        if (valor == null || valor.compareTo(BigDecimal.ZERO) <= 0) {
             throw new PrecioInvalidoException();
         }
     }

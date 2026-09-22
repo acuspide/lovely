@@ -36,4 +36,12 @@ public class PrecioTest {
         });
     }
 
+    @Test
+    void unPrecioEnCeroDebeLanzarReglaDominioException() {
+        // RN18: el precio debe ser mayor a cero, no solo no-negativo.
+        assertThrows(ReglaDominioException.class, () -> {
+            new Precio(BigDecimal.ZERO);
+        });
+    }
+
 }
