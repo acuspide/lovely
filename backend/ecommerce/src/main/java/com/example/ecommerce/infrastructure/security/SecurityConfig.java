@@ -14,6 +14,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -26,8 +27,11 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    // Lista separada por comas: en desarrollo el puerto por defecto de
+    // Angular (4200) a veces está ocupado por otro proceso, así que se
+    // admite más de un origen en vez de forzar uno solo fijo.
     @Value("${app.cors.origen-permitido}")
-    private String origenPermitido;
+    private String origenesPermitidos;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, TokenProvider tokenProvider,
@@ -52,7 +56,10 @@ public class SecurityConfig {
 
     private CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuracion = new CorsConfiguration();
-        configuracion.setAllowedOrigins(List.of(origenPermitido));
+        configuracion.setAllowedOrigins(Arrays.stream(origenesPermitidos.split(","))
+                .map(String::trim)
+                .filter(origen -> !origen.isEmpty())
+                .toList());
         configuracion.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
         configuracion.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
