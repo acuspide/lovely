@@ -1,0 +1,39 @@
+@use '../../../shared/styles/layout';
+
+.barra-superior {
+  @include layout.barra-superior;
+}
+
+.contenido {
+  @include layout.contenido-app;
+}
+
+.tarjeta-bienvenida {
+  background: var(--color-surface);
+  border-radius: var(--radio-borde);
+  box-shadow: var(--sombra-tarjeta);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  h2 {
+    margin: 0;
+    color: var(--color-primary-dark);
+  }
+
+  .rol-actual {
+    margin: 0;
+  }
+
+  .correo {
+    margin: 0;
+    color: var(--color-text-muted);
+  }
+}
+
+.enlace-admin {
+  align-self: flex-start;
+  margin-top: 1rem;
+  text-decoration: none;
+}

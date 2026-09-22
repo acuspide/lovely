@@ -1,0 +1,83 @@
+<header class="barra-superior">
+  <h1>Lovely Girl · Usuarios</h1>
+  <a routerLink="/dashboard" class="btn btn-secundario">Volver</a>
+</header>
+
+<main class="contenido">
+  <section class="tarjeta">
+    <h2>Nuevo usuario interno</h2>
+
+    @if (errorAlta(); as mensaje) {
+      <div class="alerta alerta-error">{{ mensaje }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="crearUsuario()" class="formulario-alta">
+      <div class="campo">
+        <label for="nombre">Nombre</label>
+        <input id="nombre" type="text" formControlName="nombre" />
+      </div>
+
+      <div class="campo">
+        <label for="email">Correo</label>
+        <input id="email" type="email" formControlName="email" />
+      </div>
+
+      <div class="campo">
+        <label for="contrasena">Contraseña temporal</label>
+        <input id="contrasena" type="password" formControlName="contrasena" />
+      </div>
+
+      <div class="campo">
+        <label for="rol">Rol</label>
+        <select id="rol" formControlName="rol">
+          @for (rol of rolesDisponibles; track rol) {
+            <option [value]="rol">{{ etiquetasRol[rol] }}</option>
+          }
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="enviandoAlta()">
+        {{ enviandoAlta() ? 'Creando…' : 'Crear usuario' }}
+      </button>
+    </form>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Usuarios registrados</h2>
+
+    @if (cargando()) {
+      <p>Cargando usuarios…</p>
+    } @else {
+      <table class="tabla-usuarios">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (usuario of usuarios(); track usuario.id) {
+            <tr>
+              <td>{{ usuario.nombre }}</td>
+              <td>{{ usuario.email }}</td>
+              <td>{{ etiquetasRol[usuario.rol] }}</td>
+              <td>
+                <span class="estado" [class.estado-activo]="usuario.activo" [class.estado-inactivo]="!usuario.activo">
+                  {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <button type="button" class="btn btn-secundario" (click)="alternarEstado(usuario)">
+                  {{ usuario.activo ? 'Desactivar' : 'Activar' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+</main>

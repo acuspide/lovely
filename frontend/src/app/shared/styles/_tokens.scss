@@ -1,0 +1,23 @@
+// Paleta de marca de Lovely Girl (RNF-04: tonos rosados/lilas, tipografía
+// elegante), tomada de los mockups de Uizard del SyRS. Se define una sola vez
+// aquí y se consume como variables CSS globales para que cualquier
+// componente pueda usarla sin volver a declarar colores.
+:root {
+  --color-primary: #b23a72;
+  --color-primary-dark: #7d2350;
+  --color-primary-light: #f3c9dd;
+  --color-accent: #8e44ad;
+  --color-bg: #fff6fa;
+  --color-surface: #ffffff;
+  --color-text: #3a2340;
+  --color-text-muted: #8a7089;
+  --color-border: #f0d9e6;
+  --color-danger: #c0392b;
+  --color-danger-bg: #fdecea;
+  --color-success: #1e7e5c;
+  --color-success-bg: #e6f6f0;
+
+  --radio-borde: 12px;
+  --sombra-tarjeta: 0 10px 30px rgba(178, 58, 114, 0.12);
+  --fuente-principal: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}

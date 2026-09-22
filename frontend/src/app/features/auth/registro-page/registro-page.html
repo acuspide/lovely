@@ -1,0 +1,54 @@
+<div class="pagina-auth">
+  <div class="tarjeta-auth">
+    <div class="marca-auth">
+      <h1>Lovely Girl</h1>
+      <p>Crea tu cuenta de clienta</p>
+    </div>
+
+    @if (errorGeneral(); as mensaje) {
+      <div class="alerta alerta-error">{{ mensaje }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="enviar()" class="formulario">
+      <div class="campo">
+        <label for="nombre">Nombre completo</label>
+        <input id="nombre" type="text" formControlName="nombre" autocomplete="name" />
+        @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+          <span class="campo-error">El nombre es obligatorio.</span>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="email">Correo electrónico</label>
+        <input id="email" type="email" formControlName="email" autocomplete="email" />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <span class="campo-error">Ingresa un correo válido.</span>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="contrasena">Contraseña</label>
+        <input id="contrasena" type="password" formControlName="contrasena" autocomplete="new-password" />
+        @if (form.controls.contrasena.invalid && form.controls.contrasena.touched) {
+          <span class="campo-error">Mínimo 8 caracteres.</span>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="confirmarContrasena">Confirmar contraseña</label>
+        <input id="confirmarContrasena" type="password" formControlName="confirmarContrasena" autocomplete="new-password" />
+        @if (form.errors?.['contrasenasNoCoinciden'] && form.controls.confirmarContrasena.touched) {
+          <span class="campo-error">Las contraseñas no coinciden.</span>
+        }
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="enviando()">
+        {{ enviando() ? 'Creando cuenta…' : 'Crear cuenta' }}
+      </button>
+    </form>
+
+    <p class="enlace-secundario">
+      ¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a>
+    </p>
+  </div>
+</div>

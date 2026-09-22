@@ -1,0 +1,38 @@
+<div class="pagina-auth">
+  <div class="tarjeta-auth">
+    <div class="marca-auth">
+      <h1>Lovely Girl</h1>
+      <p>Inicia sesión para continuar</p>
+    </div>
+
+    @if (errorGeneral(); as mensaje) {
+      <div class="alerta alerta-error">{{ mensaje }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="enviar()" class="formulario">
+      <div class="campo">
+        <label for="email">Correo electrónico</label>
+        <input id="email" type="email" formControlName="email" autocomplete="email" />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <span class="campo-error">Ingresa un correo válido.</span>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="contrasena">Contraseña</label>
+        <input id="contrasena" type="password" formControlName="contrasena" autocomplete="current-password" />
+        @if (form.controls.contrasena.invalid && form.controls.contrasena.touched) {
+          <span class="campo-error">La contraseña es obligatoria.</span>
+        }
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="enviando()">
+        {{ enviando() ? 'Ingresando…' : 'Iniciar sesión' }}
+      </button>
+    </form>
+
+    <p class="enlace-secundario">
+      ¿Aún no tienes cuenta? <a routerLink="/registro">Regístrate</a>
+    </p>
+  </div>
+</div>
