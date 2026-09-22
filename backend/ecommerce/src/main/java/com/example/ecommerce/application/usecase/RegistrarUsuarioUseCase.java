@@ -4,13 +4,19 @@ import com.example.ecommerce.application.PasswordHasher;
 import com.example.ecommerce.domain.entity.Usuario;
 import com.example.ecommerce.domain.exception.ContrasenaRequeridaException;
 import com.example.ecommerce.domain.exception.CorreoElectronicoDuplicadoException;
-import com.example.ecommerce.domain.exception.ReglaDominioException;
 import com.example.ecommerce.domain.repository.UsuarioRepository;
 import com.example.ecommerce.domain.valueobject.Email;
 import com.example.ecommerce.domain.valueobject.RolUsuario;
 
-import java.util.UUID;
-
+/**
+ * Caso de uso único para registrar cualquier usuario del sistema, sin
+ * importar el rol. Lo reutilizan dos adaptadores de entrada con reglas de
+ * autorización distintas (SRP: la política de "quién puede pedir qué rol" no
+ * es responsabilidad de este caso de uso, sino de quien lo invoca):
+ *  - AuthRestController (público): siempre pasa RolUsuario.CLIENTE.
+ *  - UsuarioAdminRestController (protegido, solo ADMINISTRADORA): puede pasar
+ *    cualquier rol, protegido con @PreAuthorize en la capa web.
+ */
 public class RegistrarUsuarioUseCase {
 
     private final UsuarioRepository repository;
@@ -22,7 +28,6 @@ public class RegistrarUsuarioUseCase {
     }
 
     public Usuario ejecutar(
-            long id,
             String nombre,
             String email,
             String contrasenaPlano,
@@ -44,10 +49,11 @@ public class RegistrarUsuarioUseCase {
 
         String contrasenaHash = passwordHasher.hash(contrasenaPlano);
 
-        Usuario usuario = new Usuario(id, nombre, correo, contrasenaHash, rolAsignado);
+        // id = 0: "sin persistir". El repositorio asigna el id real (secuencia
+        // de Oracle en producción, contador en memoria en los tests) y
+        // devuelve la entidad ya con su identidad definitiva.
+        Usuario usuarioSinPersistir = new Usuario(0L, nombre, correo, contrasenaHash, rolAsignado);
 
-        repository.guardar(usuario);
-
-        return usuario;
+        return repository.guardar(usuarioSinPersistir);
     }
 }

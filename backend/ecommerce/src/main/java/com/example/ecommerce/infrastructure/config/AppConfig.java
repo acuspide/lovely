@@ -1,35 +1,42 @@
 package com.example.ecommerce.infrastructure.config;
 
 import com.example.ecommerce.application.PasswordHasher;
+import com.example.ecommerce.application.TokenProvider;
 import com.example.ecommerce.application.usecase.AutenticarUsuarioUseCase;
+import com.example.ecommerce.application.usecase.CambiarEstadoUsuarioUseCase;
+import com.example.ecommerce.application.usecase.IniciarSesionUseCase;
+import com.example.ecommerce.application.usecase.ListarUsuariosUseCase;
 import com.example.ecommerce.application.usecase.RegistrarUsuarioUseCase;
 import com.example.ecommerce.domain.repository.UsuarioRepository;
-import com.example.ecommerce.infrastructure.persistence.UsuarioRepositoryEnMemoria;
-import com.example.ecommerce.infrastructure.security.PasswordHasherSha256;
+import com.example.ecommerce.infrastructure.security.BCryptPasswordHasher;
+import com.example.ecommerce.infrastructure.security.JwtTokenProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 /**
- * Cablea como beans de Spring las piezas de dominio/aplicación que ya existen
- * en el proyecto (hexagonal, sin anotaciones), para que el controlador web
- * (F-01: Autenticación y gestión de rol) pueda usarlas por inyección.
+ * Cablea como beans de Spring las piezas de dominio/aplicación (casos de uso
+ * y puertos), que a propósito son clases planas de Java sin anotaciones de
+ * framework. Demuestra DIP: esta clase es la única que conoce tanto los
+ * puertos como sus implementaciones concretas (BCryptPasswordHasher,
+ * JwtTokenProvider); todo lo demás depende solo de las interfaces.
  *
- * La implementación en memoria es intencional para este prototipo: se podrá
- * sustituir por un UsuarioRepository con JPA/MariaDB sin tocar el controlador.
+ * UsuarioRepository NO se declara aquí: su implementación de producción
+ * (UsuarioRepositoryJpaAdapter) ya es un @Repository de Spring y se inyecta
+ * directamente donde se necesite.
  */
 @Configuration
 public class AppConfig {
 
     @Bean
-    public UsuarioRepository usuarioRepository() {
-        return new UsuarioRepositoryEnMemoria();
+    public PasswordHasher passwordHasher() {
+        return new BCryptPasswordHasher();
     }
 
     @Bean
-    public PasswordHasher passwordHasher() {
-        return new PasswordHasherSha256();
+    public TokenProvider tokenProvider(@Value("${app.jwt.secret}") String secreto,
+                                        @Value("${app.jwt.expiracion-minutos}") long minutosDeExpiracion) {
+        return new JwtTokenProvider(secreto, minutosDeExpiracion);
     }
 
     @Bean
@@ -44,11 +51,19 @@ public class AppConfig {
         return new AutenticarUsuarioUseCase(usuarioRepository, passwordHasher);
     }
 
-    /**
-     * Generador simple de IDs correlativos mientras el repositorio es en memoria.
-     */
     @Bean
-    public AtomicLong usuarioIdGenerator() {
-        return new AtomicLong(0);
+    public IniciarSesionUseCase iniciarSesionUseCase(AutenticarUsuarioUseCase autenticarUsuarioUseCase,
+                                                       TokenProvider tokenProvider) {
+        return new IniciarSesionUseCase(autenticarUsuarioUseCase, tokenProvider);
+    }
+
+    @Bean
+    public ListarUsuariosUseCase listarUsuariosUseCase(UsuarioRepository usuarioRepository) {
+        return new ListarUsuariosUseCase(usuarioRepository);
+    }
+
+    @Bean
+    public CambiarEstadoUsuarioUseCase cambiarEstadoUsuarioUseCase(UsuarioRepository usuarioRepository) {
+        return new CambiarEstadoUsuarioUseCase(usuarioRepository);
     }
 }
