@@ -1,87 +1,75 @@
 package com.example.ecommerce.domain.entity;
 
+import com.example.ecommerce.domain.exception.ClaveIdempotenciaInvalidaException;
+import com.example.ecommerce.domain.exception.PedidoSinDetallesException;
 import com.example.ecommerce.domain.exception.ReglaDominioException;
 import com.example.ecommerce.domain.valueobject.DetallePedido;
 import com.example.ecommerce.domain.valueobject.EstadoPedido;
 import com.example.ecommerce.domain.valueobject.Precio;
+import com.example.ecommerce.support.Pedidos;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/** F-05: reglas del pedido. */
 public class PedidoTest {
 
+    private static final Precio DIEZ_MIL = new Precio(new BigDecimal("10000"));
+
     @Test
-    void unPedidoSinDetallesNoDebePoderConfirmarse() {
+    void unPedidoNuevoNaceEnEstadoPendiente() {
+        // RF-05.1
+        Pedido pedido = Pedidos.pendiente(100L, new DetallePedido(1L, "Labial", 2, DIEZ_MIL));
 
-        // Arrange
-        Pedido pedido = new Pedido(1L, 100L);
-
-        // Act y Assert
-        assertThrows(ReglaDominioException.class, pedido::confirmar);
+        assertEquals(EstadoPedido.PENDIENTE, pedido.getEstado());
+        assertEquals(Pedidos.AHORA, pedido.getCreadoEn());
     }
 
     @Test
-    void unPedidoConAlMenosUnDetalleDebePoderConfirmarse() {
+    void unPedidoSinProductosNoSePuedeCrear() {
+        // RN16 / RF-05.3
+        assertThrows(PedidoSinDetallesException.class, () -> Pedido.registrar(
+                100L, List.of(), Pedidos.retiroEnTienda(), Pedidos.AHORA, Pedidos.claveNueva()));
+    }
 
-        // Arrange
-        Pedido pedido = new Pedido(1L, 100L);
-        Precio precio = new Precio(new BigDecimal("10000"));
-        pedido.agregarDetalle(new DetallePedido(1L, 2, precio));
+    @Test
+    void exigeUnaClaveDeIntentoValida() {
+        // RF-05.7
+        assertThrows(ClaveIdempotenciaInvalidaException.class, () -> Pedido.registrar(
+                100L, List.of(new DetallePedido(1L, "Labial", 1, DIEZ_MIL)), Pedidos.retiroEnTienda(),
+                Pedidos.AHORA, "no-es-un-uuid"));
+    }
 
-        // Act
-        pedido.confirmar();
+    @Test
+    void elNumeroDePedidoSaleDelConsecutivo() {
+        // RF-05.2
+        Pedido guardado = Pedidos.pendiente(100L, new DetallePedido(1L, "Labial", 1, DIEZ_MIL)).conId(42L);
 
-        // Assert
-        assertEquals(EstadoPedido.CONFIRMADO, pedido.getEstado());
+        assertEquals("LG-000042", guardado.getNumero().valor());
     }
 
     @Test
     void unPedidoCanceladoNuncaDebeVolverAConfirmarse() {
-
-        // Arrange
-        Pedido pedido = new Pedido(1L, 100L);
-        Precio precio = new Precio(new BigDecimal("10000"));
-        pedido.agregarDetalle(new DetallePedido(1L, 2, precio));
+        Pedido pedido = Pedidos.pendiente(100L, new DetallePedido(1L, "Labial", 2, DIEZ_MIL));
         pedido.cancelar();
 
-        // Act y Assert
         assertThrows(ReglaDominioException.class, pedido::confirmar);
+        assertFalse(pedido.estaActivo());
     }
 
     @Test
     void elTotalDelPedidoDebeSerLaSumaDeLosSubtotalesDeSusDetalles() {
+        Pedido pedido = Pedidos.pendiente(100L,
+                new DetallePedido(1L, "Labial", 2, DIEZ_MIL), new DetallePedido(2L, "Base", 1, DIEZ_MIL));
 
-        // Arrange
-        Pedido pedido = new Pedido(1L, 100L);
-        Precio precio = new Precio(new BigDecimal("10000"));
-        pedido.agregarDetalle(new DetallePedido(1L, 2, precio));
-        pedido.agregarDetalle(new DetallePedido(2L, 1, precio));
-
-        // Act
-        BigDecimal total = pedido.calcularTotal();
-
-        // Assert
-        assertEquals(new BigDecimal("30000"), total);
-    }
-
-    @Test
-    void elPrecioDeUnDetalleYaAgregadoNoCambiaSiCambiaElPrecioDelArticulo() {
-
-        // Arrange
-        Pedido pedido = new Pedido(1L, 100L);
-        Precio precioAlMomentoDeLaCompra = new Precio(new BigDecimal("10000"));
-        pedido.agregarDetalle(new DetallePedido(1L, 1, precioAlMomentoDeLaCompra));
-
-        // Act
-        // Simulamos que el precio del articulo cambia despues de la compra
-        // creando otra instancia de Precio; el detalle ya congelo el suyo
-        // y el total del pedido no debe verse afectado.
-        new Precio(new BigDecimal("15000"));
-
-        // Assert
-        assertEquals(new BigDecimal("10000"), pedido.calcularTotal());
+        assertEquals(new BigDecimal("30000"), pedido.calcularTotal());
+        assertEquals(3, pedido.cantidadDeUnidades());
+        assertTrue(pedido.incluyeArticulo(2L));
     }
 }

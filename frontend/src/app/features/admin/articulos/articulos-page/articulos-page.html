@@ -7,11 +7,6 @@
     @if (error(); as mensaje) {
       <div class="alerta alerta-error" role="alert">
         {{ mensaje }}
-        @if (sugerirDesactivar(); as articulo) {
-          <button type="button" class="btn btn-secundario btn-en-alerta" (click)="cambiarEstado(articulo)">
-            Desactivar "{{ articulo.nombre }}"
-          </button>
-        }
       </div>
     }
     @if (exito(); as mensaje) {
@@ -159,7 +154,8 @@
                 <button type="button" class="btn btn-secundario" (click)="cambiarEstado(articulo)">
                   {{ articulo.activo ? 'Desactivar' : 'Reactivar' }}
                 </button>
-                <button type="button" class="btn btn-secundario btn-peligro" (click)="eliminar(articulo)">Eliminar</button>
+                <button type="button" class="btn btn-secundario btn-peligro" [disabled]="verificandoEliminacion() === articulo.id"
+                        (click)="eliminar(articulo)">{{ verificandoEliminacion() === articulo.id ? 'Verificando…' : 'Eliminar' }}</button>
               </td>
             </tr>
           }
@@ -186,4 +182,18 @@
   [articuloId]="detalleId()"
   (cerrar)="detalleId.set(null)"
   (editar)="editarDesdeDetalle($event)"
+/>
+
+<!-- RF-02.9: advertencia inmediata si el producto tiene pedidos activos. -->
+<app-dialogo-confirmacion
+  [abierto]="articuloConPedidos() !== null"
+  titulo="No se puede eliminar este producto"
+  [mensaje]="'«' + (articuloConPedidos()?.nombre ?? '') + '» tiene pedidos activos, así que no se puede eliminar.'"
+  [detalle]="articuloConPedidos()?.activo
+    ? 'Puedes desactivarlo: deja de mostrarse en el catálogo y se conserva el historial de sus pedidos.'
+    : 'El producto ya está desactivado, así que no se muestra en el catálogo.'"
+  [textoConfirmar]="articuloConPedidos()?.activo ? 'Desactivar producto' : 'Entendido'"
+  textoCancelar="Cerrar"
+  (confirmar)="responderAdvertenciaPedidos()"
+  (cancelar)="articuloConPedidos.set(null)"
 />

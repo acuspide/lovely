@@ -9,7 +9,6 @@ import com.example.ecommerce.application.usecase.ObtenerArticuloUseCase;
 import com.example.ecommerce.application.usecase.RevisarCarritoUseCase;
 import com.example.ecommerce.domain.repository.ArticuloRepository;
 import com.example.ecommerce.domain.repository.PedidoRepository;
-import com.example.ecommerce.infrastructure.persistence.PedidoRepositoryEnMemoria;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -35,17 +34,6 @@ public class AppConfig {
     @Bean
     public Clock reloj() {
         return Clock.systemUTC();
-    }
-
-    /**
-     * F-02 usa PedidoRepository solo para la verificación de solo lectura de
-     * RN17 (¿tiene pedidos activos?). El feature "Realizar Pedido" (con su
-     * propio adaptador Oracle) todavía no existe, así que por ahora el único
-     * adaptador es este de memoria — intencional, no un descuido.
-     */
-    @Bean
-    public PedidoRepository pedidoRepository() {
-        return new PedidoRepositoryEnMemoria();
     }
 
     @Bean

@@ -44,10 +44,12 @@ export class ArticulosPage {
   protected readonly error = signal<string | null>(null);
   protected readonly exito = signal<string | null>(null);
   /**
-   * RF-02.9: producto que no se pudo eliminar por tener pedidos activos. Mientras
-   * tenga valor, el aviso de error ofrece el botón "Desactivar en su lugar".
+   * RF-02.9: producto que no se puede eliminar por tener pedidos activos.
+   * Mientras tenga valor se muestra la advertencia, que ofrece desactivarlo.
    */
-  protected readonly sugerirDesactivar = signal<Articulo | null>(null);
+  protected readonly articuloConPedidos = signal<Articulo | null>(null);
+  /** Producto cuya posibilidad de eliminación se está consultando. */
+  protected readonly verificandoEliminacion = signal<number | null>(null);
   /** RF-02.8: producto que espera confirmación para eliminarse (null = ventana cerrada). */
   protected readonly articuloPorEliminar = signal<Articulo | null>(null);
   protected readonly editando = signal<Articulo | null>(null);
@@ -210,9 +212,40 @@ export class ArticulosPage {
     });
   }
 
-  /** RF-02.8: antes de eliminar se pide confirmación en una ventana propia. */
+  /**
+   * RF-02.8 / RF-02.9: antes de pedir confirmación se pregunta al backend si el
+   * producto se puede eliminar. Si tiene pedidos activos, se avisa de inmediato
+   * con la advertencia (y la opción de desactivarlo) en lugar de la confirmación.
+   */
   eliminar(articulo: Articulo): void {
-    this.articuloPorEliminar.set(articulo);
+    if (this.verificandoEliminacion() !== null) {
+      return;
+    }
+    this.limpiarAvisos();
+    this.verificandoEliminacion.set(articulo.id);
+    this.articuloService.verificarEliminacion(articulo.id).subscribe({
+      next: ({ puedeEliminarse }) => {
+        this.verificandoEliminacion.set(null);
+        if (puedeEliminarse) {
+          this.articuloPorEliminar.set(articulo);
+        } else {
+          this.articuloConPedidos.set(articulo);
+        }
+      },
+      error: (err: unknown) => {
+        this.verificandoEliminacion.set(null);
+        this.error.set(extraerMensajeError(err, 'No se pudo verificar el producto. Intenta de nuevo.'));
+      },
+    });
+  }
+
+  /** Respuesta a la advertencia de RF-02.9: desactivar (si sigue activo) o simplemente cerrar. */
+  responderAdvertenciaPedidos(): void {
+    const articulo = this.articuloConPedidos();
+    this.articuloConPedidos.set(null);
+    if (articulo?.activo) {
+      this.cambiarEstado(articulo);
+    }
   }
 
   cancelarEliminacion(): void {
@@ -233,9 +266,10 @@ export class ArticulosPage {
       },
       error: (err: unknown) => {
         this.error.set(extraerMensajeError(err, 'Ocurrió un error. Intenta de nuevo.'));
-        // RF-02.9: el backend indica que la alternativa es desactivarlo.
+        // RF-02.9: por si alguien hizo un pedido entre la verificación y la confirmación.
         if (err instanceof HttpErrorResponse && err.error?.accionSugerida === 'DESACTIVAR') {
-          this.sugerirDesactivar.set(articulo);
+          this.error.set(null);
+          this.articuloConPedidos.set(articulo);
         }
       },
     });
@@ -266,6 +300,6 @@ export class ArticulosPage {
   private limpiarAvisos(): void {
     this.error.set(null);
     this.exito.set(null);
-    this.sugerirDesactivar.set(null);
+    this.articuloConPedidos.set(null);
   }
 }

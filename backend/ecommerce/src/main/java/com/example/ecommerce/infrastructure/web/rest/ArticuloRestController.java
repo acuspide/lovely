@@ -36,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -121,6 +122,16 @@ public class ArticuloRestController {
     @PreAuthorize("hasRole('ADMINISTRADORA')")
     public ResponseEntity<ArticuloResponse> obtenerParaGestion(@PathVariable long id) {
         return ResponseEntity.ok(ArticuloResponse.desde(obtenerArticuloUseCase.ejecutarParaGestion(id)));
+    }
+
+    /**
+     * RF-02.9: ¿se puede eliminar? La pantalla lo pregunta al presionar
+     * "Eliminar" para avisar de inmediato si el producto tiene pedidos activos.
+     */
+    @GetMapping("/gestion/{id}/eliminacion")
+    @PreAuthorize("hasRole('ADMINISTRADORA')")
+    public ResponseEntity<Map<String, Boolean>> verificarEliminacion(@PathVariable long id) {
+        return ResponseEntity.ok(Map.of("puedeEliminarse", eliminarArticuloUseCase.puedeEliminarse(id)));
     }
 
     @GetMapping("/{id}")

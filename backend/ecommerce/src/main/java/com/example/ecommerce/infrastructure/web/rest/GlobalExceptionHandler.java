@@ -1,7 +1,11 @@
 package com.example.ecommerce.infrastructure.web.rest;
 
 import com.example.ecommerce.application.AlmacenamientoImagenException;
+import com.example.ecommerce.domain.exception.ArticuloAgotadoException;
 import com.example.ecommerce.domain.exception.ArticuloConPedidosActivosException;
+import com.example.ecommerce.domain.exception.ArticuloInactivoException;
+import com.example.ecommerce.domain.exception.PedidoNoEncontradoException;
+import com.example.ecommerce.domain.exception.StockInsuficienteException;
 import com.example.ecommerce.domain.exception.ArticuloNoEncontradoException;
 import com.example.ecommerce.domain.exception.CorreoElectronicoDuplicadoException;
 import com.example.ecommerce.domain.exception.CredencialesInvalidasException;
@@ -121,6 +125,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AlmacenamientoImagenException.class)
     public ProblemDetail errorAlmacenandoImagen(AlmacenamientoImagenException ex) {
         return problema(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+    }
+
+    // RF-05.4 / RN09: el pedido no se registra porque algo del carrito ya no está disponible.
+    // 409 + "REVISAR_CARRITO": el frontend vuelve a revisar el carrito y muestra qué cambió.
+    @ExceptionHandler({StockInsuficienteException.class, ArticuloAgotadoException.class,
+            ArticuloInactivoException.class})
+    public ProblemDetail productoNoDisponible(RuntimeException ex) {
+        ProblemDetail problema = problema(HttpStatus.CONFLICT, ex.getMessage());
+        problema.setProperty("accionSugerida", "REVISAR_CARRITO");
+        return problema;
+    }
+
+    @ExceptionHandler(PedidoNoEncontradoException.class)
+    public ProblemDetail pedidoNoEncontrado(PedidoNoEncontradoException ex) {
+        return problema(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

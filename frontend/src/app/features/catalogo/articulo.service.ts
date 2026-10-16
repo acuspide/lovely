@@ -70,6 +70,11 @@ export class ArticuloService {
     return this.http.post<ImagenSubida>(`${API_BASE_URL}/articulos/imagenes`, formulario);
   }
 
+  /** RF-02.9: pregunta, sin borrar nada, si el producto se puede eliminar (no tiene pedidos activos). */
+  verificarEliminacion(id: number): Observable<{ puedeEliminarse: boolean }> {
+    return this.http.get<{ puedeEliminarse: boolean }>(`${API_BASE_URL}/articulos/gestion/${id}/eliminacion`);
+  }
+
   /** RF-02.7: desactiva (activo = false) o reactiva (activo = true) un producto. */
   cambiarEstado(id: number, activo: boolean): Observable<Articulo> {
     return this.http.patch<Articulo>(`${API_BASE_URL}/articulos/${id}/estado`, { activo });

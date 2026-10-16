@@ -36,6 +36,16 @@ export const routes: Routes = [
       import('./features/carrito/confirmar-pedido-page/confirmar-pedido-page').then((m) => m.ConfirmarPedidoPage),
   },
 
+  // F-05 / RF-05.5: pedido de la clienta (confirmación y consulta).
+  {
+    path: 'pedido/:id',
+    canActivate: [roleGuard(['CLIENTE'])],
+    loadComponent: () =>
+      import('./features/pedidos-cliente/pedido-confirmado-page/pedido-confirmado-page').then(
+        (m) => m.PedidoConfirmadoPage,
+      ),
+  },
+
   // Pantallas de visitante.
   {
     path: 'login',

@@ -11,10 +11,12 @@ import com.example.ecommerce.domain.valueobject.DetallePedido;
 import com.example.ecommerce.domain.valueobject.Precio;
 import com.example.ecommerce.infrastructure.persistence.ArticuloRepositoryEnMemoria;
 import com.example.ecommerce.infrastructure.persistence.PedidoRepositoryEnMemoria;
+import com.example.ecommerce.support.Pedidos;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -59,10 +61,8 @@ class EliminarArticuloUseCaseTest {
         PedidoRepository pedidoRepository = new PedidoRepositoryEnMemoria();
         Articulo articulo = crearArticulo(articuloRepository);
 
-        Pedido pedido = new Pedido(1L, 100L);
-        pedido.agregarDetalle(new DetallePedido(articulo.getId(), 1, articulo.getPrecio()));
-        pedido.confirmar();
-        pedidoRepository.guardar(pedido);
+        pedidoRepository.guardar(Pedidos.pendiente(100L,
+                new DetallePedido(articulo.getId(), "Labial Mate", 1, articulo.getPrecio())));
 
         EliminarArticuloUseCase useCase = new EliminarArticuloUseCase(articuloRepository, pedidoRepository);
 
@@ -80,8 +80,8 @@ class EliminarArticuloUseCaseTest {
         PedidoRepository pedidoRepository = new PedidoRepositoryEnMemoria();
         Articulo articulo = crearArticulo(articuloRepository);
 
-        Pedido pedido = new Pedido(1L, 100L);
-        pedido.agregarDetalle(new DetallePedido(articulo.getId(), 1, articulo.getPrecio()));
+        Pedido pedido = Pedidos.pendiente(100L,
+                new DetallePedido(articulo.getId(), "Labial Mate", 1, articulo.getPrecio()));
         pedido.cancelar();
         pedidoRepository.guardar(pedido);
 
@@ -92,5 +92,20 @@ class EliminarArticuloUseCaseTest {
 
         // Assert
         assertTrue(articuloRepository.obtenerPorId(articulo.getId()).isEmpty());
+    }
+
+    @Test
+    void puedeEliminarseRespondeSinBorrarNada() {
+        // Arrange (RF-02.9: consulta previa)
+        ArticuloRepository articuloRepository = new ArticuloRepositoryEnMemoria();
+        PedidoRepository pedidoRepository = new PedidoRepositoryEnMemoria();
+        Articulo conPedido = crearArticulo(articuloRepository);
+        pedidoRepository.guardar(Pedidos.pendiente(100L,
+                new DetallePedido(conPedido.getId(), "Labial Mate", 1, conPedido.getPrecio())));
+        EliminarArticuloUseCase useCase = new EliminarArticuloUseCase(articuloRepository, pedidoRepository);
+
+        // Act y Assert
+        assertFalse(useCase.puedeEliminarse(conPedido.getId()));
+        assertTrue(articuloRepository.obtenerPorId(conPedido.getId()).isPresent());
     }
 }

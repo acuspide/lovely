@@ -23,15 +23,23 @@ public class EliminarArticuloUseCase {
     }
 
     public void ejecutar(long id) {
-        articuloRepository.obtenerPorId(id)
-                .orElseThrow(ArticuloNoEncontradoException::new);
-
         // RF-02.9 / RN17: no se puede eliminar un producto con pedidos activos;
         // la excepción sugiere desactivarlo (RF-02.7).
-        if (pedidoRepository.existePedidoActivoConArticulo(id)) {
+        if (!puedeEliminarse(id)) {
             throw new ArticuloConPedidosActivosException();
         }
 
         articuloRepository.eliminar(id);
+    }
+
+    /**
+     * RF-02.9: consulta previa, sin borrar nada, para que la pantalla avise de
+     * inmediato (antes de pedir confirmación) si el producto no se puede
+     * eliminar. La regla es la misma que aplica {@link #ejecutar(long)}.
+     */
+    public boolean puedeEliminarse(long id) {
+        articuloRepository.obtenerPorId(id)
+                .orElseThrow(ArticuloNoEncontradoException::new);
+        return !pedidoRepository.existePedidoActivoConArticulo(id);
     }
 }
