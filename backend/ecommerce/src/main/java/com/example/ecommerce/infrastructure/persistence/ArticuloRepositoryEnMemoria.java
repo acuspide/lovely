@@ -26,9 +26,10 @@ public class ArticuloRepositoryEnMemoria implements ArticuloRepository {
     }
 
     @Override
-    public Optional<Articulo> buscarPorNombre(String nombre) {
+    public Optional<Articulo> buscarPorNombre(NombreArticulo nombre) {
+        // NombreArticulo.equals compara por clave (RF-02.3).
         return articulos.values().stream()
-                .filter(articulo -> articulo.getNombre().equals(new NombreArticulo(nombre)))
+                .filter(articulo -> articulo.getNombre().equals(nombre))
                 .findFirst();
     }
 

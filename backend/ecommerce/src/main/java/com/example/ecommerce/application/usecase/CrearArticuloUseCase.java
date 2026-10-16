@@ -7,6 +7,17 @@ import com.example.ecommerce.domain.valueobject.CategoriaArticulo;
 import com.example.ecommerce.domain.valueobject.NombreArticulo;
 import com.example.ecommerce.domain.valueobject.Precio;
 
+/**
+ * RF-02.1 / CU-01 "Crear Producto": la Administradora registra un producto
+ * nuevo con su stock inicial.
+ *
+ * <ul>
+ *   <li>RF-02.2: las validaciones de cada dato las hacen el value object
+ *       {@link NombreArticulo}, {@link Precio} y la entidad {@link Articulo}.</li>
+ *   <li>RF-02.3: este caso de uso comprueba, con el repositorio, que el nombre
+ *       no lo use otro producto.</li>
+ * </ul>
+ */
 public class CrearArticuloUseCase {
 
     private final ArticuloRepository repository;
@@ -26,12 +37,12 @@ public class CrearArticuloUseCase {
 
         NombreArticulo nombreArticulo = new NombreArticulo(nombre);
 
-        // CU-01, curso alterno A2: nombre de producto duplicado.
-        if (repository.buscarPorNombre(nombre).isPresent()) {
-            throw new NombreArticuloDuplicadoException();
-        }
+        // RF-02.3 / CU-01 A2: nombre duplicado (sin distinguir mayúsculas ni tildes).
+        repository.buscarPorNombre(nombreArticulo).ifPresent(existente -> {
+            throw new NombreArticuloDuplicadoException(existente.getNombre().getValor());
+        });
 
-        // id = 0: "sin persistir", igual que RegistrarUsuarioUseCase (F-01).
+        // id = 0: "sin persistir", igual que las cuentas de usuario (F-01).
         Articulo articuloSinPersistir = new Articulo(
                 0L, nombreArticulo, descripcion, precio, categoria, marca, imagenUrl, stock);
 

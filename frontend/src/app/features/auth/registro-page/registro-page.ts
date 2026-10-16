@@ -1,28 +1,31 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
-import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { extraerMensajeError } from '../../../core/http/mensaje-error';
+import { RequisitosContrasena } from '../../../shared/components/requisitos-contrasena/requisitos-contrasena';
+import {
+  camposCoincidenValidator,
+  contrasenaSeguraValidator,
+  telefonoValidator,
+} from '../../../shared/validators/cuenta.validators';
+import { VerContrasena } from '../../../shared/directives/ver-contrasena';
 
 interface RegistroForm {
   nombre: FormControl<string>;
   email: FormControl<string>;
+  telefono: FormControl<string>;
   contrasena: FormControl<string>;
   confirmarContrasena: FormControl<string>;
+  aceptaHabeasData: FormControl<boolean>;
 }
 
-/** Validador a nivel de grupo: espeja la regla del backend (ContrasenasNoCoincidenException). */
-function contrasenasCoincidenValidator(grupo: AbstractControl): ValidationErrors | null {
-  const contrasena = grupo.get('contrasena')?.value;
-  const confirmacion = grupo.get('confirmarContrasena')?.value;
-  return contrasena === confirmacion ? null : { contrasenasNoCoinciden: true };
-}
-
+/** RF-01.1: una clienta crea su propia cuenta. */
 @Component({
   selector: 'app-registro-page',
-  standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, RequisitosContrasena, VerContrasena],
   templateUrl: './registro-page.html',
   styleUrl: './registro-page.scss',
 })
@@ -35,13 +38,17 @@ export class RegistroPage {
 
   protected readonly form = new FormGroup<RegistroForm>(
     {
-      nombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+      nombre: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(150)] }),
       email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
-      contrasena: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(8)] }),
+      telefono: new FormControl('', { nonNullable: true, validators: [Validators.required, telefonoValidator] }),
+      contrasena: new FormControl('', { nonNullable: true, validators: [Validators.required, contrasenaSeguraValidator] }),
       confirmarContrasena: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+      aceptaHabeasData: new FormControl(false, { nonNullable: true, validators: [Validators.requiredTrue] }),
     },
-    { validators: contrasenasCoincidenValidator },
+    { validators: camposCoincidenValidator('contrasena', 'confirmarContrasena') },
   );
+
+  protected readonly contrasenaEscrita = toSignal(this.form.controls.contrasena.valueChanges, { initialValue: '' });
 
   enviar(): void {
     if (this.form.invalid || this.enviando()) {
@@ -52,30 +59,22 @@ export class RegistroPage {
     this.enviando.set(true);
     this.errorGeneral.set(null);
 
-    const { nombre, email, contrasena, confirmarContrasena } = this.form.getRawValue();
+    const datos = this.form.getRawValue();
 
-    this.authService.registro(nombre, email, contrasena, confirmarContrasena).subscribe({
-      next: () => this.autenticarTrasRegistro(email, contrasena),
+    this.authService.registro(datos).subscribe({
+      next: () => this.iniciarSesionTrasRegistro(datos.email, datos.contrasena),
       error: (error: unknown) => {
         this.enviando.set(false);
-        this.errorGeneral.set(this.extraerMensaje(error));
+        this.errorGeneral.set(extraerMensajeError(error, 'No se pudo completar el registro. Intenta de nuevo.'));
       },
     });
   }
 
-  private autenticarTrasRegistro(email: string, contrasena: string): void {
-    // El registro solo crea la cuenta; se inicia sesión enseguida para que
-    // la nueva clienta no tenga que volver a escribir sus datos en /login.
+  /** Así la nueva clienta no tiene que volver a escribir sus datos; entra directo al catálogo (RF-01.3). */
+  private iniciarSesionTrasRegistro(email: string, contrasena: string): void {
     this.authService.login(email, contrasena).subscribe({
-      next: () => this.router.navigateByUrl('/dashboard'),
-      error: () => this.router.navigateByUrl('/login'),
+      next: () => this.router.navigateByUrl(this.authService.rutaInicio(), { replaceUrl: true }),
+      error: () => this.router.navigateByUrl('/login', { replaceUrl: true }),
     });
-  }
-
-  private extraerMensaje(error: unknown): string {
-    if (error instanceof HttpErrorResponse && typeof error.error?.detail === 'string') {
-      return error.error.detail;
-    }
-    return 'No se pudo completar el registro. Intenta de nuevo.';
   }
 }

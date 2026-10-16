@@ -22,3 +22,6 @@ Thumbs.db
 
 # --- Docker volúmenes locales (si se usan bind mounts) ---
 oracle-data/
+
+# --- Imagenes subidas de los productos (RF-02.4) ---
+backend/ecommerce/uploads/

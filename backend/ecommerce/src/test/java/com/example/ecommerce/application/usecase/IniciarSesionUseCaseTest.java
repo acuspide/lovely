@@ -1,53 +1,59 @@
 package com.example.ecommerce.application.usecase;
 
-import com.example.ecommerce.application.PasswordHasher;
-import com.example.ecommerce.application.TokenProvider;
+import com.example.ecommerce.application.usecase.IniciarSesionUseCase.SesionIniciada;
 import com.example.ecommerce.domain.entity.Usuario;
-import com.example.ecommerce.domain.repository.UsuarioRepository;
 import com.example.ecommerce.domain.valueobject.RolUsuario;
-import com.example.ecommerce.infrastructure.persistence.UsuarioRepositoryEnMemoria;
-import com.example.ecommerce.infrastructure.security.BCryptPasswordHasher;
+import com.example.ecommerce.support.EntornoAutenticacion;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.api.Test;
 
+import static com.example.ecommerce.support.EntornoAutenticacion.CONTRASENA_VALIDA;
+import static com.example.ecommerce.support.EntornoAutenticacion.INACTIVIDAD_MAXIMA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/** RF-01.3: cada uno de los cuatro roles inicia sesión. */
 class IniciarSesionUseCaseTest {
 
-    /** Test double del puerto TokenProvider: aísla este test de JJWT. */
-    private static class TokenProviderFalso implements TokenProvider {
-        @Override
-        public String generarToken(Usuario usuario) {
-            return "token-de-prueba-" + usuario.getId();
-        }
+    private EntornoAutenticacion entorno;
+    private IniciarSesionUseCase useCase;
 
-        @Override
-        public long minutosDeExpiracion() {
-            return 30;
-        }
+    @BeforeEach
+    void preparar() {
+        entorno = new EntornoAutenticacion();
+        AutenticarUsuarioUseCase autenticar =
+                new AutenticarUsuarioUseCase(entorno.usuarios, entorno.passwordHasher, entorno.transacciones, entorno.reloj);
+        useCase = new IniciarSesionUseCase(autenticar, entorno.sesiones, entorno.tokenProvider,
+                INACTIVIDAD_MAXIMA, entorno.reloj);
+    }
 
-        @Override
-        public DatosToken validar(String token) {
-            throw new UnsupportedOperationException("No usado en este test.");
-        }
+    @ParameterizedTest
+    @EnumSource(value = RolUsuario.class, names = {"ASESORA_VENTAS", "ENCARGADA_INVENTARIO", "ADMINISTRADORA"})
+    void elPersonalIniciaSesionYRecibeSuRol(RolUsuario rol) {
+        // Arrange
+        entorno.crearPersonal("persona@lovelygirl.com", rol);
+
+        // Act
+        SesionIniciada sesion = useCase.ejecutar("persona@lovelygirl.com", CONTRASENA_VALIDA);
+
+        // Assert
+        assertEquals(rol, sesion.usuario().getRol());
     }
 
     @Test
-    void debeAutenticarYEmitirUnTokenConLosMinutosDeExpiracionConfigurados() {
+    void laClienteIniciaSesionYSeAbreUnaSesionQueVenceEnTreintaMinutos() {
         // Arrange
-        UsuarioRepository repository = new UsuarioRepositoryEnMemoria();
-        PasswordHasher passwordHasher = new BCryptPasswordHasher();
-        new RegistrarUsuarioUseCase(repository, passwordHasher)
-                .ejecutar("Ana", "ana@correo.com", "clave123", RolUsuario.CLIENTE);
-
-        AutenticarUsuarioUseCase autenticarUsuarioUseCase = new AutenticarUsuarioUseCase(repository, passwordHasher);
-        IniciarSesionUseCase useCase = new IniciarSesionUseCase(autenticarUsuarioUseCase, new TokenProviderFalso());
+        Usuario cliente = entorno.registrarCliente("ana@correo.com");
 
         // Act
-        IniciarSesionUseCase.SesionIniciada sesion = useCase.ejecutar("ana@correo.com", "clave123");
+        SesionIniciada sesion = useCase.ejecutar("ana@correo.com", CONTRASENA_VALIDA);
 
         // Assert
-        assertEquals("ana@correo.com", sesion.usuario().getEmail().getValor());
-        assertEquals(30, sesion.minutosDeExpiracion());
-        assertEquals("token-de-prueba-" + sesion.usuario().getId(), sesion.token());
+        assertEquals(RolUsuario.CLIENTE, sesion.usuario().getRol());
+        assertEquals(INACTIVIDAD_MAXIMA, sesion.vigencia());
+        assertEquals(1, entorno.sesiones.abiertasDe(cliente.getId()).size());
+        assertTrue(sesion.token().endsWith("|" + cliente.getId()));
     }
 }

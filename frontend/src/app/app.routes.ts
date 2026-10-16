@@ -1,25 +1,69 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, roleGuard } from './core/auth/auth.guard';
+import { authGuard, invitadoGuard, roleGuard } from './core/auth/auth.guard';
 
+/**
+ * RNF-06: cada ruta protegida declara qué roles pueden entrar. Las rutas
+ * marcadas con IU-XX son las pantallas de inicio de cada rol (RF-01.3).
+ */
 export const routes: Routes = [
+  // IU-01: catálogo, público e inicio de la Cliente.
   {
     path: '',
     pathMatch: 'full',
     loadComponent: () =>
       import('./features/catalogo/catalogo-publico/catalogo-publico-page').then((m) => m.CatalogoPublicoPage),
   },
+
+  // RF-03.5: detalle de un producto, público como el catálogo.
+  {
+    path: 'producto/:id',
+    loadComponent: () =>
+      import('./features/catalogo/detalle-producto/detalle-producto-page').then((m) => m.DetalleProductoPage),
+  },
+
+  // Pantallas de visitante.
   {
     path: 'login',
+    canActivate: [invitadoGuard],
     loadComponent: () => import('./features/auth/login-page/login-page').then((m) => m.LoginPage),
   },
   {
     path: 'registro',
+    canActivate: [invitadoGuard],
     loadComponent: () => import('./features/auth/registro-page/registro-page').then((m) => m.RegistroPage),
   },
   {
-    path: 'dashboard',
+    path: 'recuperar-contrasena',
+    canActivate: [invitadoGuard],
+    loadComponent: () =>
+      import('./features/auth/recuperar-contrasena-page/recuperar-contrasena-page').then((m) => m.RecuperarContrasenaPage),
+  },
+  {
+    // Sin invitadoGuard: el enlace del correo debe funcionar aunque haya otra sesión abierta.
+    path: 'restablecer-contrasena',
+    loadComponent: () =>
+      import('./features/auth/restablecer-contrasena-page/restablecer-contrasena-page').then(
+        (m) => m.RestablecerContrasenaPage,
+      ),
+  },
+  {
+    path: 'politica-de-datos',
+    loadComponent: () =>
+      import('./features/auth/politica-datos-page/politica-datos-page').then((m) => m.PoliticaDatosPage),
+  },
+
+  // IU-07: perfil, para los cuatro roles.
+  {
+    path: 'perfil',
     canActivate: [authGuard],
+    loadComponent: () => import('./features/perfil/perfil-page/perfil-page').then((m) => m.PerfilPage),
+  },
+
+  // IU-03: dashboard de la Administradora.
+  {
+    path: 'dashboard',
+    canActivate: [roleGuard(['ADMINISTRADORA'])],
     loadComponent: () => import('./features/dashboard/dashboard-page/dashboard-page').then((m) => m.DashboardPage),
   },
   {
@@ -32,5 +76,20 @@ export const routes: Routes = [
     canActivate: [roleGuard(['ADMINISTRADORA'])],
     loadComponent: () => import('./features/admin/articulos/articulos-page/articulos-page').then((m) => m.ArticulosPage),
   },
+
+  // IU-04: gestión de pedidos de la Asesora de Ventas.
+  {
+    path: 'pedidos',
+    canActivate: [roleGuard(['ASESORA_VENTAS'])],
+    loadComponent: () => import('./features/pedidos/pedidos-page').then((m) => m.PedidosPage),
+  },
+
+  // IU-05: control de inventario de la Encargada de Inventario.
+  {
+    path: 'inventario',
+    canActivate: [roleGuard(['ENCARGADA_INVENTARIO'])],
+    loadComponent: () => import('./features/inventario/inventario-page').then((m) => m.InventarioPage),
+  },
+
   { path: '**', redirectTo: '' },
 ];

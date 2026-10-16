@@ -1,0 +1,46 @@
+<div class="selector-imagen">
+  <div class="vista-previa" [class.vacia]="!(url() | urlImagen)">
+    @if (url() | urlImagen; as src) {
+      <img [src]="src" alt="Vista previa de la imagen del producto" />
+    } @else {
+      <span>Sin imagen</span>
+    }
+  </div>
+
+  <div class="controles">
+    <label class="btn btn-secundario boton-archivo" [class.deshabilitado]="cargando()">
+      {{ url() ? 'Cambiar imagen' : 'Elegir imagen' }}
+      <input
+        type="file"
+        class="solo-lectores"
+        [accept]="tiposAceptados"
+        [disabled]="cargando()"
+        aria-describedby="ayuda-imagen"
+        (change)="alSeleccionar($event)"
+      />
+    </label>
+
+    @if (url() && !cargando()) {
+      <button type="button" class="btn btn-secundario" (click)="quitarImagen()">Quitar imagen</button>
+    }
+
+    <span id="ayuda-imagen" class="campo-ayuda">JPG, PNG o WEBP · máximo {{ tamanoMaximoMb }} MB</span>
+
+    @if (cargando()) {
+      <span class="estado-subida" role="status">Subiendo imagen…</span>
+    }
+
+    @if (error(); as mensaje) {
+      <!-- CU-01, curso alterno A4 -->
+      <div class="alerta alerta-error" role="alert">
+        {{ mensaje }}
+        <div class="acciones-error">
+          @if (puedeReintentar()) {
+            <button type="button" class="btn btn-secundario" (click)="reintentar()">Reintentar</button>
+          }
+          <button type="button" class="btn btn-secundario" (click)="quitarImagen()">Continuar sin imagen</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

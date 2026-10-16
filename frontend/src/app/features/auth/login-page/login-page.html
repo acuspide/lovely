@@ -5,11 +5,15 @@
       <p>Inicia sesión para continuar</p>
     </div>
 
-    @if (errorGeneral(); as mensaje) {
-      <div class="alerta alerta-error">{{ mensaje }}</div>
+    @if (mensajeInformativo(); as mensaje) {
+      <div class="alerta alerta-info" role="status">{{ mensaje }}</div>
     }
 
-    <form [formGroup]="form" (ngSubmit)="enviar()" class="formulario">
+    @if (errorGeneral(); as mensaje) {
+      <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="enviar()" class="formulario" novalidate>
       <div class="campo">
         <label for="email">Correo electrónico</label>
         <input id="email" type="email" formControlName="email" autocomplete="email" />
@@ -26,6 +30,8 @@
         }
       </div>
 
+      <a routerLink="/recuperar-contrasena" class="enlace-olvido">¿Olvidaste tu contraseña?</a>
+
       <button type="submit" class="btn btn-primary" [disabled]="enviando()">
         {{ enviando() ? 'Ingresando…' : 'Iniciar sesión' }}
       </button>
@@ -33,6 +39,9 @@
 
     <p class="enlace-secundario">
       ¿Aún no tienes cuenta? <a routerLink="/registro">Regístrate</a>
+    </p>
+    <p class="enlace-secundario">
+      <a routerLink="/">Ver el catálogo sin iniciar sesión</a>
     </p>
   </div>
 </div>

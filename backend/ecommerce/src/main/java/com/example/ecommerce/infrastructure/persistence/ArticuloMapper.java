@@ -24,7 +24,8 @@ public final class ArticuloMapper {
                 CategoriaArticulo.valueOf(entidad.getCategoria().name()),
                 entidad.getMarca(),
                 entidad.getImagenUrl(),
-                entidad.getStock());
+                entidad.getStock(),
+                entidad.isActivo());
     }
 
     public static ArticuloJpaEntity aEntidad(Articulo articulo) {
@@ -35,11 +36,13 @@ public final class ArticuloMapper {
         return new ArticuloJpaEntity(
                 id,
                 articulo.getNombre().getValor(),
+                articulo.getNombre().clave(),
                 articulo.getDescripcion(),
                 articulo.getPrecio().valor(),
                 ArticuloJpaEntity.CategoriaJpa.valueOf(articulo.getCategoria().name()),
                 articulo.getMarca(),
                 articulo.getImagenUrl(),
-                articulo.getStock());
+                articulo.getStock(),
+                articulo.isActivo());
     }
 }

@@ -67,8 +67,10 @@ class EliminarArticuloUseCaseTest {
         EliminarArticuloUseCase useCase = new EliminarArticuloUseCase(articuloRepository, pedidoRepository);
 
         // Act y Assert
-        assertThrows(ArticuloConPedidosActivosException.class, () -> useCase.ejecutar(articulo.getId()));
+        ArticuloConPedidosActivosException error = assertThrows(
+                ArticuloConPedidosActivosException.class, () -> useCase.ejecutar(articulo.getId()));
         assertTrue(articuloRepository.obtenerPorId(articulo.getId()).isPresent());
+        assertTrue(error.getMessage().contains("desactivarlo"), "RF-02.9: sugiere desactivar");
     }
 
     @Test

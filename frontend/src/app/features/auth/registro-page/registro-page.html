@@ -2,17 +2,17 @@
   <div class="tarjeta-auth">
     <div class="marca-auth">
       <h1>Lovely Girl</h1>
-      <p>Crea tu cuenta de clienta</p>
+      <p>Crea tu cuenta</p>
     </div>
 
     @if (errorGeneral(); as mensaje) {
-      <div class="alerta alerta-error">{{ mensaje }}</div>
+      <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
     }
 
-    <form [formGroup]="form" (ngSubmit)="enviar()" class="formulario">
+    <form [formGroup]="form" (ngSubmit)="enviar()" class="formulario" novalidate>
       <div class="campo">
         <label for="nombre">Nombre completo</label>
-        <input id="nombre" type="text" formControlName="nombre" autocomplete="name" />
+        <input id="nombre" type="text" formControlName="nombre" autocomplete="name" maxlength="150" />
         @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
           <span class="campo-error">El nombre es obligatorio.</span>
         }
@@ -27,20 +27,44 @@
       </div>
 
       <div class="campo">
-        <label for="contrasena">Contraseña</label>
-        <input id="contrasena" type="password" formControlName="contrasena" autocomplete="new-password" />
-        @if (form.controls.contrasena.invalid && form.controls.contrasena.touched) {
-          <span class="campo-error">Mínimo 8 caracteres.</span>
+        <label for="telefono">Teléfono</label>
+        <input id="telefono" type="tel" formControlName="telefono" autocomplete="tel" placeholder="300 123 4567" />
+        @if (form.controls.telefono.invalid && form.controls.telefono.touched) {
+          <span class="campo-error">Ingresa un teléfono de 10 dígitos.</span>
         }
+      </div>
+
+      <div class="campo">
+        <label for="contrasena">Contraseña</label>
+        <input
+          id="contrasena"
+          type="password"
+          formControlName="contrasena"
+          autocomplete="new-password"
+          aria-describedby="requisitos-registro"
+        />
+        <app-requisitos-contrasena [valor]="contrasenaEscrita()" idLista="requisitos-registro" />
       </div>
 
       <div class="campo">
         <label for="confirmarContrasena">Confirmar contraseña</label>
         <input id="confirmarContrasena" type="password" formControlName="confirmarContrasena" autocomplete="new-password" />
-        @if (form.errors?.['contrasenasNoCoinciden'] && form.controls.confirmarContrasena.touched) {
+        @if (form.errors?.['noCoinciden'] && form.controls.confirmarContrasena.touched) {
           <span class="campo-error">Las contraseñas no coinciden.</span>
         }
       </div>
+
+      <div class="campo-casilla">
+        <input id="aceptaHabeasData" type="checkbox" formControlName="aceptaHabeasData" />
+        <label for="aceptaHabeasData">
+          Acepto la
+          <a routerLink="/politica-de-datos" target="_blank" rel="noopener">política de tratamiento de datos personales</a>
+          (Ley 1581 de 2012).
+        </label>
+      </div>
+      @if (form.controls.aceptaHabeasData.invalid && form.controls.aceptaHabeasData.touched) {
+        <span class="campo-error">Debes aceptar la política de tratamiento de datos para crear tu cuenta.</span>
+      }
 
       <button type="submit" class="btn btn-primary" [disabled]="enviando()">
         {{ enviando() ? 'Creando cuenta…' : 'Crear cuenta' }}

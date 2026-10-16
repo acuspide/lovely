@@ -6,8 +6,11 @@ import com.example.ecommerce.domain.repository.ArticuloRepository;
 import com.example.ecommerce.domain.repository.PedidoRepository;
 
 /**
- * CU-01, flujo "Eliminar Producto". Solo ADMINISTRADORA puede invocarlo
- * (restricción aplicada en la capa web con @PreAuthorize, no aquí).
+ * RF-02.8 / CU-01, flujo "Eliminar Producto". Solo ADMINISTRADORA puede
+ * invocarlo (restricción aplicada en la capa web con @PreAuthorize, no aquí).
+ *
+ * <p>RF-02.9: si el producto aparece en pedidos activos no se elimina, para no
+ * dejar esos pedidos apuntando a un producto inexistente.</p>
  */
 public class EliminarArticuloUseCase {
 
@@ -23,7 +26,8 @@ public class EliminarArticuloUseCase {
         articuloRepository.obtenerPorId(id)
                 .orElseThrow(ArticuloNoEncontradoException::new);
 
-        // RN17: no se puede eliminar un producto con pedidos activos.
+        // RF-02.9 / RN17: no se puede eliminar un producto con pedidos activos;
+        // la excepción sugiere desactivarlo (RF-02.7).
         if (pedidoRepository.existePedidoActivoConArticulo(id)) {
             throw new ArticuloConPedidosActivosException();
         }

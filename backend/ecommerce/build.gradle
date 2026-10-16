@@ -29,6 +29,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	// RF-01.8: correo de recuperacion de contrasena (adaptador NotificadorCorreoSmtp).
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'org.flywaydb:flyway-database-oracle'
 	// Spring Boot 4 modulariza spring-boot-autoconfigure: la integracion con
 	// Flyway (que antes venia incluida siempre) ahora es un artefacto aparte.
@@ -54,4 +56,9 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+// Limita la memoria de la app Spring Boot al correr con ./gradlew bootRun.
+tasks.named('bootRun') {
+	jvmArgs = ['-Xmx512m', '-XX:MaxMetaspaceSize=256m']
 }

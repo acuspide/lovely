@@ -1,0 +1,30 @@
+@use '../../../shared/styles/layout';
+
+.contenido {
+  @include layout.contenido-app;
+}
+
+.documento {
+  line-height: 1.6;
+
+  h2 {
+    margin-top: 0;
+    color: var(--color-primary-dark);
+  }
+
+  h3 {
+    margin: 1.5rem 0 0.25rem;
+    font-size: 1rem;
+    color: var(--color-primary-dark);
+  }
+
+  .nota {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    margin-top: 1.5rem;
+    text-decoration: none;
+  }
+}

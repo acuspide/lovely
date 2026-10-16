@@ -14,7 +14,8 @@ public record ArticuloResponse(
         String marca,
         String imagenUrl,
         int stock,
-        boolean agotado) {
+        boolean agotado,
+        boolean activo) {
 
     public static ArticuloResponse desde(Articulo articulo) {
         return new ArticuloResponse(
@@ -26,6 +27,7 @@ public record ArticuloResponse(
                 articulo.getMarca(),
                 articulo.getImagenUrl(),
                 articulo.getStock(),
-                articulo.estaAgotado());
+                articulo.estaAgotado(),
+                articulo.isActivo());
     }
 }

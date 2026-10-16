@@ -1,0 +1,39 @@
+<div class="pagina-auth">
+  <div class="tarjeta-auth">
+    <div class="marca-auth">
+      <h1>Lovely Girl</h1>
+      <p>Recupera tu contraseña</p>
+    </div>
+
+    @if (confirmacion(); as mensaje) {
+      <div class="alerta alerta-exito" role="status">{{ mensaje }}</div>
+      <p class="enlace-secundario">El enlace vence en 30 minutos y solo funciona una vez.</p>
+    } @else {
+      <p class="explicacion">
+        Escribe el correo de tu cuenta y te enviaremos un enlace para crear una contraseña nueva.
+      </p>
+
+      @if (error(); as mensaje) {
+        <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+      }
+
+      <form (ngSubmit)="enviar()" class="formulario" novalidate>
+        <div class="campo">
+          <label for="email">Correo electrónico</label>
+          <input id="email" type="email" [formControl]="email" autocomplete="email" />
+          @if (email.invalid && email.touched) {
+            <span class="campo-error">Ingresa un correo válido.</span>
+          }
+        </div>
+
+        <button type="submit" class="btn btn-primary" [disabled]="enviando()">
+          {{ enviando() ? 'Enviando…' : 'Enviar enlace' }}
+        </button>
+      </form>
+    }
+
+    <p class="enlace-secundario">
+      <a routerLink="/login">Volver a iniciar sesión</a>
+    </p>
+  </div>
+</div>

@@ -1,14 +1,19 @@
 package com.example.ecommerce.infrastructure.web.rest;
 
+import com.example.ecommerce.application.AlmacenamientoImagenException;
 import com.example.ecommerce.domain.exception.ArticuloConPedidosActivosException;
 import com.example.ecommerce.domain.exception.ArticuloNoEncontradoException;
 import com.example.ecommerce.domain.exception.CorreoElectronicoDuplicadoException;
 import com.example.ecommerce.domain.exception.CredencialesInvalidasException;
+import com.example.ecommerce.domain.exception.CuentaBloqueadaException;
 import com.example.ecommerce.domain.exception.NombreArticuloDuplicadoException;
 import com.example.ecommerce.domain.exception.ReglaDominioException;
+import com.example.ecommerce.domain.valueobject.ArchivoImagen;
 import com.example.ecommerce.domain.exception.TokenInvalidoException;
+import com.example.ecommerce.domain.exception.UltimaAdministradoraActivaException;
 import com.example.ecommerce.domain.exception.UsuarioInactivoException;
 import com.example.ecommerce.domain.exception.UsuarioNoEncontradoException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
@@ -16,6 +21,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 /**
  * Centraliza la traducción de excepciones de dominio a respuestas HTTP
@@ -40,6 +47,29 @@ public class GlobalExceptionHandler {
         return problema(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
+    // RF-01.4: 423 Locked indica que el recurso (la cuenta) está bloqueado
+    // temporalmente; el frontend muestra el mensaje con los minutos restantes.
+    @ExceptionHandler(CuentaBloqueadaException.class)
+    public ProblemDetail cuentaBloqueada(CuentaBloqueadaException ex) {
+        ProblemDetail problema = problema(HttpStatus.LOCKED, ex.getMessage());
+        problema.setProperty("minutosRestantes", ex.getMinutosRestantes());
+        return problema;
+    }
+
+    // RF-01.2: siempre debe quedar al menos una Administradora activa.
+    @ExceptionHandler(UltimaAdministradoraActivaException.class)
+    public ProblemDetail ultimaAdministradoraActiva(UltimaAdministradoraActivaException ex) {
+        return problema(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    // Red de seguridad ante dos altas simultáneas con el mismo correo: la
+    // restricción UNIQUE de la base de datos gana y se responde como un
+    // conflicto, sin exponer detalles del esquema.
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail conflictoDeDatos(DataIntegrityViolationException ex) {
+        return problema(HttpStatus.CONFLICT, "La operación entra en conflicto con datos ya registrados.");
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail accesoDenegado(AccessDeniedException ex) {
         return problema(HttpStatus.FORBIDDEN, "No tienes permisos para realizar esta acción.");
@@ -60,6 +90,7 @@ public class GlobalExceptionHandler {
         return problema(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
+    // RF-02.3 / CU-01 A2: el nombre del producto ya está en uso.
     @ExceptionHandler(NombreArticuloDuplicadoException.class)
     public ProblemDetail nombreArticuloDuplicado(NombreArticuloDuplicadoException ex) {
         return problema(HttpStatus.CONFLICT, ex.getMessage());
@@ -68,7 +99,28 @@ public class GlobalExceptionHandler {
     // RN17: no se puede eliminar un producto con pedidos activos.
     @ExceptionHandler(ArticuloConPedidosActivosException.class)
     public ProblemDetail articuloConPedidosActivos(ArticuloConPedidosActivosException ex) {
-        return problema(HttpStatus.CONFLICT, ex.getMessage());
+        // RF-02.9: le indica al frontend que ofrezca "Desactivar" en lugar de eliminar.
+        ProblemDetail problema = problema(HttpStatus.CONFLICT, ex.getMessage());
+        problema.setProperty("accionSugerida", "DESACTIVAR");
+        return problema;
+    }
+
+    // RF-02.4: Spring rechaza el archivo antes de leerlo si supera el límite configurado.
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ProblemDetail imagenDemasiadoGrande(MaxUploadSizeExceededException ex) {
+        return problema(HttpStatus.CONTENT_TOO_LARGE,
+                "La imagen pesa demasiado. El tamaño máximo es " + ArchivoImagen.TAMANO_MAXIMO_MB + " MB.");
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ProblemDetail imagenFaltante(MissingServletRequestPartException ex) {
+        return problema(HttpStatus.BAD_REQUEST, "Selecciona una imagen para subir.");
+    }
+
+    // CU-01 A4: falla técnica al guardar la imagen; la interfaz ofrece reintentar o seguir sin imagen.
+    @ExceptionHandler(AlmacenamientoImagenException.class)
+    public ProblemDetail errorAlmacenandoImagen(AlmacenamientoImagenException ex) {
+        return problema(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

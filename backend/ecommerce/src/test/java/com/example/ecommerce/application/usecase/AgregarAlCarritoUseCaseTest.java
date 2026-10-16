@@ -2,6 +2,8 @@ package com.example.ecommerce.application.usecase;
 
 import com.example.ecommerce.domain.entity.Articulo;
 import com.example.ecommerce.domain.entity.Carrito;
+import com.example.ecommerce.domain.exception.ArticuloAgotadoException;
+import com.example.ecommerce.domain.exception.ArticuloInactivoException;
 import com.example.ecommerce.domain.exception.ReglaDominioException;
 import com.example.ecommerce.domain.repository.ArticuloRepository;
 import com.example.ecommerce.domain.repository.CarritoRepository;
@@ -43,7 +45,7 @@ public class AgregarAlCarritoUseCaseTest {
         AgregarAlCarritoUseCase useCase = new AgregarAlCarritoUseCase(carritoRepository, articuloRepository);
 
         // Act
-        Carrito carrito = useCase.ejecutar(1L, 100L, 1L, 2, new Precio(new BigDecimal("20000")), 10);
+        Carrito carrito = useCase.ejecutar(1L, 100L, 1L, 2);
 
         // Assert
         assertEquals(new BigDecimal("40000"), carrito.calcularTotal());
@@ -59,7 +61,54 @@ public class AgregarAlCarritoUseCaseTest {
 
         // Act y Assert
         assertThrows(ReglaDominioException.class, () -> {
-            useCase.ejecutar(1L, 100L, 99L, 1, new Precio(new BigDecimal("20000")), 5);
+            useCase.ejecutar(1L, 100L, 99L, 1);
         });
+    }
+
+    @Test
+    void noDebePermitirAgregarUnArticuloDesactivado() {
+
+        // Arrange (RF-02.7)
+        ArticuloRepository articuloRepository = new ArticuloRepositoryEnMemoria();
+        CarritoRepository carritoRepository = new CarritoRepositoryEnMemoria();
+        Articulo articulo = crearArticuloPublicado(articuloRepository);
+        new CambiarEstadoArticuloUseCase(articuloRepository).ejecutar(articulo.getId(), false);
+        AgregarAlCarritoUseCase useCase = new AgregarAlCarritoUseCase(carritoRepository, articuloRepository);
+
+        // Act y Assert
+        assertThrows(ArticuloInactivoException.class, () ->
+                useCase.ejecutar(1L, 100L, articulo.getId(), 1));
+    }
+
+    @Test
+    void noDebePermitirAgregarUnArticuloAgotado() {
+
+        // Arrange (RF-03.4 / RN01): producto activo pero con stock 0
+        ArticuloRepository articuloRepository = new ArticuloRepositoryEnMemoria();
+        CarritoRepository carritoRepository = new CarritoRepositoryEnMemoria();
+        Articulo agotado = articuloRepository.guardar(new Articulo(
+                0L, new NombreArticulo("Base Agotada"), "Descripción",
+                new Precio(new BigDecimal("30000")), CategoriaArticulo.FACIAL,
+                null, null, 0));
+        AgregarAlCarritoUseCase useCase = new AgregarAlCarritoUseCase(carritoRepository, articuloRepository);
+
+        // Act y Assert
+        assertThrows(ArticuloAgotadoException.class, () -> useCase.ejecutar(1L, 100L, agotado.getId(), 1));
+    }
+
+    @Test
+    void usaElPrecioGuardadoDelProductoYNoUnoExterno() {
+
+        // Arrange
+        ArticuloRepository articuloRepository = new ArticuloRepositoryEnMemoria();
+        CarritoRepository carritoRepository = new CarritoRepositoryEnMemoria();
+        Articulo articulo = crearArticuloPublicado(articuloRepository);
+        AgregarAlCarritoUseCase useCase = new AgregarAlCarritoUseCase(carritoRepository, articuloRepository);
+
+        // Act
+        Carrito carrito = useCase.ejecutar(1L, 100L, articulo.getId(), 3);
+
+        // Assert: 3 x 20000
+        assertEquals(new BigDecimal("60000"), carrito.calcularTotal());
     }
 }

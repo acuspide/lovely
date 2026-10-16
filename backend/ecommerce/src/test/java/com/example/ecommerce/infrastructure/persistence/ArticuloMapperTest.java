@@ -17,7 +17,7 @@ class ArticuloMapperTest {
     @Test
     void aEntidadDejaElIdEnNullCuandoElArticuloAunNoSePersiste() {
         // Arrange
-        Articulo articulo = new Articulo(0L, new NombreArticulo("Labial"), "Descripción",
+        Articulo articulo = new Articulo(0L, new NombreArticulo("Labial Ñapa"), "Descripción",
                 new Precio(new BigDecimal("20000")), CategoriaArticulo.MAQUILLAJE,
                 "Maybelline", "https://ejemplo.com/labial.jpg", 10);
 
@@ -26,7 +26,8 @@ class ArticuloMapperTest {
 
         // Assert
         assertNull(entidad.getId());
-        assertEquals("Labial", entidad.getNombre());
+        assertEquals("Labial Ñapa", entidad.getNombre());
+        assertEquals("labial napa", entidad.getNombreClave(), "RF-02.3: se persiste la clave normalizada");
         assertEquals(ArticuloJpaEntity.CategoriaJpa.MAQUILLAJE, entidad.getCategoria());
     }
 
@@ -46,5 +47,20 @@ class ArticuloMapperTest {
         assertEquals(original.getCategoria(), reconstruido.getCategoria());
         assertEquals(original.getStock(), reconstruido.getStock());
         assertEquals(original.getMarca(), reconstruido.getMarca());
+        assertEquals(original.isActivo(), reconstruido.isActivo());
+    }
+
+    @Test
+    void conservaElEstadoInactivo() {
+        // Arrange (RF-02.7)
+        Articulo inactivo = new Articulo(3L, new NombreArticulo("Tónico"), "Descripción",
+                new Precio(new BigDecimal("18000")), CategoriaArticulo.FACIAL,
+                null, "https://ejemplo.com/tonico.jpg", 0, false);
+
+        // Act
+        Articulo reconstruido = ArticuloMapper.aDominio(ArticuloMapper.aEntidad(inactivo));
+
+        // Assert
+        org.junit.jupiter.api.Assertions.assertFalse(reconstruido.isActivo());
     }
 }

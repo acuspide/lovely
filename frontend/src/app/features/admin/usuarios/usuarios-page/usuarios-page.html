@@ -1,83 +1,138 @@
-<header class="barra-superior">
-  <h1>Lovely Girl · Usuarios</h1>
-  <a routerLink="/dashboard" class="btn btn-secundario">Volver</a>
-</header>
+<app-barra-superior seccion="Personal" />
 
 <main class="contenido">
   <section class="tarjeta">
-    <h2>Nuevo usuario interno</h2>
+    <h2>{{ cuentaEnEdicion() ? 'Editar cuenta' : 'Nueva cuenta del personal' }}</h2>
 
-    @if (errorAlta(); as mensaje) {
-      <div class="alerta alerta-error">{{ mensaje }}</div>
+    @if (errorFormulario(); as mensaje) {
+      <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
     }
 
-    <form [formGroup]="form" (ngSubmit)="crearUsuario()" class="formulario-alta">
+    <form [formGroup]="form" (ngSubmit)="guardar()" class="formulario-cuenta" novalidate>
       <div class="campo">
         <label for="nombre">Nombre</label>
-        <input id="nombre" type="text" formControlName="nombre" />
+        <input id="nombre" type="text" formControlName="nombre" maxlength="150" />
+        @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+          <span class="campo-error">El nombre es obligatorio.</span>
+        }
       </div>
 
       <div class="campo">
         <label for="email">Correo</label>
         <input id="email" type="email" formControlName="email" />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <span class="campo-error">Ingresa un correo válido.</span>
+        }
       </div>
 
       <div class="campo">
-        <label for="contrasena">Contraseña temporal</label>
-        <input id="contrasena" type="password" formControlName="contrasena" />
+        <label for="telefono">Teléfono (opcional)</label>
+        <input id="telefono" type="tel" formControlName="telefono" placeholder="300 123 4567" />
+        @if (form.controls.telefono.invalid && form.controls.telefono.touched) {
+          <span class="campo-error">Debe tener 10 dígitos.</span>
+        }
       </div>
 
       <div class="campo">
         <label for="rol">Rol</label>
         <select id="rol" formControlName="rol">
-          @for (rol of rolesDisponibles; track rol) {
+          @for (rol of rolesPersonal; track rol) {
             <option [value]="rol">{{ etiquetasRol[rol] }}</option>
           }
         </select>
       </div>
 
-      <button type="submit" class="btn btn-primary" [disabled]="enviandoAlta()">
-        {{ enviandoAlta() ? 'Creando…' : 'Crear usuario' }}
-      </button>
+      @if (!cuentaEnEdicion()) {
+        <div class="campo campo-ancho">
+          <label for="contrasena">Contraseña inicial</label>
+          <input
+            id="contrasena"
+            type="password"
+            formControlName="contrasena"
+            autocomplete="new-password"
+            aria-describedby="requisitos-personal"
+          />
+          <app-requisitos-contrasena [valor]="contrasenaEscrita()" idLista="requisitos-personal" />
+        </div>
+      }
+
+      <div class="acciones-formulario">
+        @if (cuentaEnEdicion()) {
+          <button type="button" class="btn btn-secundario" (click)="cancelarEdicion()">Cancelar</button>
+        }
+        <button type="submit" class="btn btn-primary" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : cuentaEnEdicion() ? 'Guardar cambios' : 'Crear cuenta' }}
+        </button>
+      </div>
     </form>
   </section>
 
   <section class="tarjeta">
-    <h2>Usuarios registrados</h2>
+    <h2>Personal registrado</h2>
+
+    @if (exito(); as mensaje) {
+      <div class="alerta alerta-exito" role="status">{{ mensaje }}</div>
+    }
+    @if (errorTabla(); as mensaje) {
+      <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+    }
 
     @if (cargando()) {
-      <p>Cargando usuarios…</p>
+      <p>Cargando personal…</p>
+    } @else if (personal().length === 0) {
+      <p>Todavía no hay cuentas del personal.</p>
     } @else {
-      <table class="tabla-usuarios">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Correo</th>
-            <th>Rol</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (usuario of usuarios(); track usuario.id) {
+      <div class="tabla-contenedor">
+        <table class="tabla-usuarios">
+          <thead>
             <tr>
-              <td>{{ usuario.nombre }}</td>
-              <td>{{ usuario.email }}</td>
-              <td>{{ etiquetasRol[usuario.rol] }}</td>
-              <td>
-                <span class="estado" [class.estado-activo]="usuario.activo" [class.estado-inactivo]="!usuario.activo">
-                  {{ usuario.activo ? 'Activo' : 'Inactivo' }}
-                </span>
-              </td>
-              <td>
-                <button type="button" class="btn btn-secundario" (click)="alternarEstado(usuario)">
-                  {{ usuario.activo ? 'Desactivar' : 'Activar' }}
-                </button>
-              </td>
+              <th scope="col">Nombre</th>
+              <th scope="col">Correo</th>
+              <th scope="col">Teléfono</th>
+              <th scope="col">Rol</th>
+              <th scope="col">Estado</th>
+              <th scope="col"><span class="solo-lectores">Acciones</span></th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (cuenta of personal(); track cuenta.id) {
+              <tr [class.fila-en-edicion]="cuentaEnEdicion()?.id === cuenta.id">
+                <td>
+                  {{ cuenta.nombre }}
+                  @if (cuenta.id === idUsuarioActual()) {
+                    <span class="etiqueta-tu">(tú)</span>
+                  }
+                </td>
+                <td>{{ cuenta.email }}</td>
+                <td>{{ cuenta.telefono ?? '—' }}</td>
+                <td>{{ etiquetasRol[cuenta.rol] }}</td>
+                <td>
+                  <span class="estado" [class.estado-activo]="cuenta.activo" [class.estado-inactivo]="!cuenta.activo">
+                    {{ cuenta.activo ? 'Activa' : 'Desactivada' }}
+                  </span>
+                </td>
+                <td class="acciones-fila">
+                  <button type="button" class="btn btn-secundario" (click)="editar(cuenta)">Editar</button>
+                  <button type="button" class="btn btn-secundario" (click)="alternarEstado(cuenta)">
+                    {{ cuenta.activo ? 'Desactivar' : 'Activar' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
   </section>
 </main>
+
+<app-dialogo-confirmacion
+  [abierto]="cuentaPorDesactivar() !== null"
+  titulo="Desactivar cuenta"
+  [mensaje]="'¿Desactivar la cuenta de ' + (cuentaPorDesactivar()?.nombre ?? '') + '?'"
+  detalle="No podrá iniciar sesión hasta que la vuelvas a activar. Sus sesiones abiertas se cerrarán."
+  textoConfirmar="Sí, desactivar"
+  [peligroso]="true"
+  (confirmar)="confirmarDesactivacion()"
+  (cancelar)="cuentaPorDesactivar.set(null)"
+/>

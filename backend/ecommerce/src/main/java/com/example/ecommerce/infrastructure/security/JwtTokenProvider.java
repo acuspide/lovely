@@ -1,6 +1,7 @@
 package com.example.ecommerce.infrastructure.security;
 
 import com.example.ecommerce.application.TokenProvider;
+import com.example.ecommerce.domain.entity.Sesion;
 import com.example.ecommerce.domain.entity.Usuario;
 import com.example.ecommerce.domain.exception.TokenInvalidoException;
 import io.jsonwebtoken.Claims;
@@ -9,61 +10,59 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 /**
- * Adaptador de infraestructura del puerto TokenProvider usando JWT (jjwt).
- * Es la única clase del proyecto que conoce la librería JWT; los casos de uso
- * solo dependen de la interfaz TokenProvider (DIP).
+ * Adaptador del puerto TokenProvider con JWT (jjwt). Es la única clase del
+ * proyecto que conoce la librería JWT.
+ *
+ * El token lleva el id de la sesión (claim "jti") y el del usuario ("sub").
+ * Su fecha de expiración es solo un tope absoluto de seguridad: la expiración
+ * por inactividad (RF-01.6) y el cierre manual (RF-01.7) se controlan con la
+ * sesión guardada en el servidor.
  */
 public class JwtTokenProvider implements TokenProvider {
 
-    private static final String CLAIM_ROL = "rol";
-    private static final String CLAIM_ID = "id";
-
     private final SecretKey claveFirma;
-    private final long minutosDeExpiracion;
+    private final Duration duracionMaxima;
+    private final Clock reloj;
 
-    public JwtTokenProvider(String secreto, long minutosDeExpiracion) {
-        this.claveFirma = Keys.hmacShaKeyFor(secreto.getBytes());
-        this.minutosDeExpiracion = minutosDeExpiracion;
+    public JwtTokenProvider(String secreto, Duration duracionMaxima, Clock reloj) {
+        this.claveFirma = Keys.hmacShaKeyFor(secreto.getBytes(StandardCharsets.UTF_8));
+        this.duracionMaxima = duracionMaxima;
+        this.reloj = reloj;
     }
 
     @Override
-    public String generarToken(Usuario usuario) {
-        Instant ahora = Instant.now();
+    public String generarToken(Usuario usuario, Sesion sesion) {
+        Instant ahora = reloj.instant();
 
         // Patrón: Builder — Jwts.builder() arma el token paso a paso
         // (claims, fechas, firma) y al final produce el String inmutable.
         return Jwts.builder()
-                .subject(usuario.getEmail().getValor())
-                .claim(CLAIM_ID, usuario.getId())
-                .claim(CLAIM_ROL, usuario.getRol().name())
+                .id(sesion.getId())
+                .subject(String.valueOf(usuario.getId()))
                 .issuedAt(Date.from(ahora))
-                .expiration(Date.from(ahora.plus(minutosDeExpiracion, ChronoUnit.MINUTES)))
+                .expiration(Date.from(ahora.plus(duracionMaxima)))
                 .signWith(claveFirma)
                 .compact();
     }
 
     @Override
-    public long minutosDeExpiracion() {
-        return minutosDeExpiracion;
-    }
-
-    @Override
-    public DatosToken validar(String token) {
+    public DatosToken leer(String token) {
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(claveFirma)
+                    .clock(() -> Date.from(reloj.instant()))
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
 
-            long id = claims.get(CLAIM_ID, Long.class);
-            String rol = claims.get(CLAIM_ROL, String.class);
-            return new DatosToken(id, claims.getSubject(), rol);
+            return new DatosToken(claims.getId(), Long.parseLong(claims.getSubject()));
         } catch (JwtException | IllegalArgumentException ex) {
             throw new TokenInvalidoException();
         }
