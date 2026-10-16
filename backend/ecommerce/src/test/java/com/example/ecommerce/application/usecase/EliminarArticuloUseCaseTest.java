@@ -9,6 +9,7 @@ import com.example.ecommerce.domain.repository.PedidoRepository;
 import com.example.ecommerce.domain.valueobject.CategoriaArticulo;
 import com.example.ecommerce.domain.valueobject.DetallePedido;
 import com.example.ecommerce.domain.valueobject.Precio;
+import com.example.ecommerce.domain.valueobject.QuienCancela;
 import com.example.ecommerce.infrastructure.persistence.ArticuloRepositoryEnMemoria;
 import com.example.ecommerce.infrastructure.persistence.PedidoRepositoryEnMemoria;
 import com.example.ecommerce.support.Pedidos;
@@ -82,7 +83,7 @@ class EliminarArticuloUseCaseTest {
 
         Pedido pedido = Pedidos.pendiente(100L,
                 new DetallePedido(articulo.getId(), "Labial Mate", 1, articulo.getPrecio()));
-        pedido.cancelar();
+        pedido.cancelar(QuienCancela.CLIENTA, 100L, "Ya no lo necesito", Pedidos.AHORA);
         pedidoRepository.guardar(pedido);
 
         EliminarArticuloUseCase useCase = new EliminarArticuloUseCase(articuloRepository, pedidoRepository);

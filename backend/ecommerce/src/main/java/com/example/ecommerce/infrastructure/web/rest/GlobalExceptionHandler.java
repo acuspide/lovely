@@ -4,7 +4,9 @@ import com.example.ecommerce.application.AlmacenamientoImagenException;
 import com.example.ecommerce.domain.exception.ArticuloAgotadoException;
 import com.example.ecommerce.domain.exception.ArticuloConPedidosActivosException;
 import com.example.ecommerce.domain.exception.ArticuloInactivoException;
+import com.example.ecommerce.domain.exception.CancelacionNoPermitidaException;
 import com.example.ecommerce.domain.exception.PedidoNoEncontradoException;
+import com.example.ecommerce.domain.exception.TransicionEstadoInvalidaException;
 import com.example.ecommerce.domain.exception.StockInsuficienteException;
 import com.example.ecommerce.domain.exception.ArticuloNoEncontradoException;
 import com.example.ecommerce.domain.exception.CorreoElectronicoDuplicadoException;
@@ -138,12 +140,21 @@ public class GlobalExceptionHandler {
         return problema;
     }
 
-    // RF-06.5: otra compra tiene bloqueado el producto por más de 5 segundos (mucha demanda).
-    // No se registró nada: la clienta puede reintentar sin riesgo de duplicar (RF-05.7).
+    // RF-06.5 / F-07: otra operación tiene bloqueado el producto o el pedido por más de
+    // 5 segundos. No se guardó nada: se puede reintentar sin riesgo de duplicar (RF-05.7).
     @ExceptionHandler(PessimisticLockingFailureException.class)
     public ProblemDetail productoOcupado(PessimisticLockingFailureException ex) {
         return problema(HttpStatus.SERVICE_UNAVAILABLE,
-                "Hay muchas compras de este producto en este momento. Intenta de nuevo en unos segundos.");
+                "Hay mucha actividad sobre este pedido o producto en este momento. Intenta de nuevo en unos segundos.");
+    }
+
+    // RF-07.3 / RF-07.4 / RF-07.5: el pedido ya no está en el estado que se vio en pantalla
+    // (otra persona lo cambió) o el diagrama no permite ese paso. La web recarga el pedido.
+    @ExceptionHandler({TransicionEstadoInvalidaException.class, CancelacionNoPermitidaException.class})
+    public ProblemDetail cambioDeEstadoNoPermitido(RuntimeException ex) {
+        ProblemDetail problema = problema(HttpStatus.CONFLICT, ex.getMessage());
+        problema.setProperty("accionSugerida", "RECARGAR_PEDIDO");
+        return problema;
     }
 
     @ExceptionHandler(PedidoNoEncontradoException.class)

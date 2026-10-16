@@ -3,9 +3,9 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { API_BASE_URL } from '../config/api.config';
-import { Pedido, SolicitudPedido } from './pedido.model';
+import { Pedido, ResumenPedidoCliente, SolicitudPedido } from './pedido.model';
 
-/** F-05: pedidos de la clienta con sesión. */
+/** F-05 y F-07: pedidos de la clienta con sesión. */
 @Injectable({ providedIn: 'root' })
 export class PedidoService {
   private readonly http = inject(HttpClient);
@@ -18,5 +18,15 @@ export class PedidoService {
   /** RF-05.5: consulta un pedido propio. */
   obtener(id: number): Observable<Pedido> {
     return this.http.get<Pedido>(`${API_BASE_URL}/pedidos/${id}`);
+  }
+
+  /** RF-07.8: "Mis pedidos", del más reciente al más antiguo. */
+  listarMios(): Observable<ResumenPedidoCliente[]> {
+    return this.http.get<ResumenPedidoCliente[]>(`${API_BASE_URL}/pedidos`);
+  }
+
+  /** RF-07.5 / RF-07.6: cancela un pedido propio Pendiente; el stock vuelve al inventario. */
+  cancelar(id: number, motivo: string): Observable<Pedido> {
+    return this.http.post<Pedido>(`${API_BASE_URL}/pedidos/${id}/cancelacion`, { motivo });
   }
 }

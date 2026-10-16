@@ -12,6 +12,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -61,10 +63,24 @@ public class PedidoJpaEntity {
     @Column(length = 300)
     private String indicaciones;
 
+    /*
+     * Detalles e historial se cargan con el pedido, pero cada colección en su
+     * propia consulta (SUBSELECT): dos listas EAGER con JOIN no se pueden
+     * combinar en Hibernate y, en las listas de pedidos, SUBSELECT evita una
+     * consulta por pedido.
+     */
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
     @JoinColumn(name = "pedido_id", nullable = false)
     @OrderBy("id")
     private List<DetallePedidoJpaEntity> detalles = new ArrayList<>();
+
+    /** RF-07.7: historial de estados, del más antiguo al más reciente. */
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SUBSELECT)
+    @JoinColumn(name = "pedido_id", nullable = false)
+    @OrderBy("id")
+    private List<HistorialEstadoPedidoJpaEntity> historial = new ArrayList<>();
 
     protected PedidoJpaEntity() {
         // Requerido por JPA.
@@ -72,7 +88,8 @@ public class PedidoJpaEntity {
 
     public PedidoJpaEntity(Long id, Long clienteId, String estado, LocalDateTime creadoEn, String claveIdempotencia,
                            String tipoEntrega, String nombreContacto, String telefonoContacto, String direccion,
-                           String ciudad, String indicaciones, List<DetallePedidoJpaEntity> detalles) {
+                           String ciudad, String indicaciones, List<DetallePedidoJpaEntity> detalles,
+                           List<HistorialEstadoPedidoJpaEntity> historial) {
         this.id = id;
         this.clienteId = clienteId;
         this.estado = estado;
@@ -85,6 +102,17 @@ public class PedidoJpaEntity {
         this.ciudad = ciudad;
         this.indicaciones = indicaciones;
         this.detalles = new ArrayList<>(detalles);
+        this.historial = new ArrayList<>(historial);
+    }
+
+    /**
+     * F-07: aplica un cambio de estado a un pedido ya guardado. Los detalles no
+     * se tocan (no cambian después del registro) y el historial solo crece:
+     * se agregan las entradas nuevas al final.
+     */
+    public void actualizarEstado(String nuevoEstado, List<HistorialEstadoPedidoJpaEntity> entradasNuevas) {
+        this.estado = nuevoEstado;
+        this.historial.addAll(entradasNuevas);
     }
 
     public Long getId() { return id; }
@@ -99,4 +127,5 @@ public class PedidoJpaEntity {
     public String getCiudad() { return ciudad; }
     public String getIndicaciones() { return indicaciones; }
     public List<DetallePedidoJpaEntity> getDetalles() { return detalles; }
+    public List<HistorialEstadoPedidoJpaEntity> getHistorial() { return historial; }
 }

@@ -1,0 +1,56 @@
+<app-barra-superior seccion="Mis pedidos" />
+
+<main class="contenido">
+  <h1>Mis pedidos</h1>
+
+  @if (exito(); as mensaje) {
+    <div class="alerta alerta-exito" role="status">{{ mensaje }}</div>
+  }
+  @if (error(); as mensaje) {
+    <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+  }
+
+  @if (cargando() && pedidos().length === 0) {
+    <p role="status">Cargando tus pedidos…</p>
+  } @else if (pedidos().length === 0 && !error()) {
+    <section class="tarjeta vacia">
+      <p>Todavía no tienes pedidos.</p>
+      <a routerLink="/" class="btn btn-primary">Ir al catálogo</a>
+    </section>
+  } @else {
+    <ul class="lista-pedidos">
+      @for (pedido of pedidos(); track pedido.id) {
+        <li class="tarjeta pedido">
+          <div class="cabecera">
+            <div>
+              <h2>{{ pedido.numero }}</h2>
+              <p class="dato">{{ fecha(pedido.creadoEn) }} · {{ etiquetaEntrega(pedido.tipoEntrega) }}</p>
+            </div>
+            <app-insignia-estado-pedido [estado]="pedido.estado" [tipoEntrega]="pedido.tipoEntrega" />
+          </div>
+          <p class="total">
+            {{ pedido.unidades }} {{ pedido.unidades === 1 ? 'producto' : 'productos' }} ·
+            <strong>$ {{ pedido.total | number: '1.0-0' }}</strong>
+          </p>
+          <div class="acciones">
+            <a class="btn btn-secundario" [routerLink]="['/pedido', pedido.id]">Ver detalle</a>
+            @if (pedido.puedeCancelar) {
+              <button type="button" class="btn btn-secundario btn-peligro" (click)="abrirCancelacion(pedido)">
+                Cancelar pedido
+              </button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</main>
+
+<app-dialogo-cancelar-pedido
+  [abierto]="porCancelar() !== null"
+  [numeroPedido]="porCancelar()?.numero ?? ''"
+  [enviando]="cancelando()"
+  [error]="errorCancelacion()"
+  (confirmar)="cancelar($event)"
+  (cerrar)="porCancelar.set(null)"
+/>

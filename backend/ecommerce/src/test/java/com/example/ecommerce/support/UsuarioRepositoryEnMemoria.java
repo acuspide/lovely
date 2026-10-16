@@ -5,6 +5,7 @@ import com.example.ecommerce.domain.repository.UsuarioRepository;
 import com.example.ecommerce.domain.valueobject.Email;
 import com.example.ecommerce.domain.valueobject.RolUsuario;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,11 @@ public class UsuarioRepositoryEnMemoria implements UsuarioRepository {
     @Override
     public Optional<Usuario> obtenerPorId(long id) {
         return Optional.ofNullable(usuarios.get(id)).map(UsuarioRepositoryEnMemoria::copia);
+    }
+
+    @Override
+    public List<Usuario> obtenerPorIds(Collection<Long> ids) {
+        return ids.stream().distinct().map(this::obtenerPorId).flatMap(Optional::stream).toList();
     }
 
     @Override

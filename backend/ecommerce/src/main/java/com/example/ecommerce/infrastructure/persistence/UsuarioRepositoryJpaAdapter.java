@@ -8,6 +8,7 @@ import com.example.ecommerce.infrastructure.persistence.jpa.UsuarioJpaEntity.Rol
 import com.example.ecommerce.infrastructure.persistence.jpa.UsuarioJpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +30,11 @@ public class UsuarioRepositoryJpaAdapter implements UsuarioRepository {
     @Override
     public Optional<Usuario> obtenerPorId(long id) {
         return jpaRepository.findById(id).map(UsuarioMapper::aDominio);
+    }
+
+    @Override
+    public List<Usuario> obtenerPorIds(Collection<Long> ids) {
+        return jpaRepository.findAllById(ids).stream().map(UsuarioMapper::aDominio).toList();
     }
 
     @Override

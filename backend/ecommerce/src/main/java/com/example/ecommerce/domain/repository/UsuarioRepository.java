@@ -3,11 +3,15 @@ package com.example.ecommerce.domain.repository;
 import com.example.ecommerce.domain.entity.Usuario;
 import com.example.ecommerce.domain.valueobject.Email;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 public interface UsuarioRepository {
     Optional<Usuario> obtenerPorId(long id);
+
+    /** F-07: varias cuentas en una sola consulta (nombres de las clientas en la lista de pedidos). */
+    List<Usuario> obtenerPorIds(Collection<Long> ids);
     Optional<Usuario> buscarPorEmail(Email email);
 
     /**

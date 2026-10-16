@@ -24,8 +24,15 @@
           <h2>{{ p.numero }}</h2>
           <p class="fecha">{{ fecha(p.creadoEn) }}</p>
         </div>
-        <span class="estado">{{ etiquetaEstado(p.estado) }}</span>
+        <app-insignia-estado-pedido [estado]="p.estado" [tipoEntrega]="p.entrega.tipo" />
       </div>
+
+      @if (avisoCancelado()) {
+        <div class="alerta alerta-exito" role="status">Tu pedido quedó cancelado.</div>
+      }
+      @if (p.motivoCancelacion) {
+        <p class="motivo"><strong>Motivo de la cancelación:</strong> {{ p.motivoCancelacion }}</p>
+      }
 
       <h3>Productos</h3>
       @for (linea of p.lineas; track linea.articuloId) {
@@ -51,7 +58,35 @@
         }
       </p>
 
-      <a routerLink="/" class="btn btn-primary">Seguir comprando</a>
+      <!-- RF-07.8: seguimiento del pedido. -->
+      <h3>Seguimiento</h3>
+      <ol class="seguimiento">
+        @for (cambio of p.historial; track $index) {
+          <li>
+            <strong>{{ etiquetaEstado(cambio.estadoNuevo) }}</strong>
+            <span class="fecha">{{ fecha(cambio.fecha) }}</span>
+          </li>
+        }
+      </ol>
+
+      <div class="acciones">
+        <a routerLink="/mis-pedidos" class="btn btn-secundario">Mis pedidos</a>
+        <a routerLink="/" class="btn btn-primary">Seguir comprando</a>
+        @if (p.puedeCancelar) {
+          <button type="button" class="btn btn-secundario btn-peligro" (click)="errorCancelacion.set(null); cancelacionAbierta.set(true)">
+            Cancelar pedido
+          </button>
+        }
+      </div>
     </section>
+
+    <app-dialogo-cancelar-pedido
+      [abierto]="cancelacionAbierta()"
+      [numeroPedido]="p.numero"
+      [enviando]="cancelando()"
+      [error]="errorCancelacion()"
+      (confirmar)="cancelar($event)"
+      (cerrar)="cancelacionAbierta.set(false)"
+    />
   }
 </main>

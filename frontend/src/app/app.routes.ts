@@ -46,6 +46,14 @@ export const routes: Routes = [
       ),
   },
 
+  // F-07 / RF-07.8: "Mis pedidos" de la clienta.
+  {
+    path: 'mis-pedidos',
+    canActivate: [roleGuard(['CLIENTE'])],
+    loadComponent: () =>
+      import('./features/pedidos-cliente/mis-pedidos-page/mis-pedidos-page').then((m) => m.MisPedidosPage),
+  },
+
   // Pantallas de visitante.
   {
     path: 'login',
@@ -101,11 +109,18 @@ export const routes: Routes = [
     loadComponent: () => import('./features/admin/articulos/articulos-page/articulos-page').then((m) => m.ArticulosPage),
   },
 
-  // IU-04: gestión de pedidos de la Asesora de Ventas.
+  // IU-04 / F-07: gestión de pedidos (inicio de la Asesora; también la usa la Administradora).
   {
     path: 'pedidos',
-    canActivate: [roleGuard(['ASESORA_VENTAS'])],
+    pathMatch: 'full',
+    canActivate: [roleGuard(['ASESORA_VENTAS', 'ADMINISTRADORA'])],
     loadComponent: () => import('./features/pedidos/pedidos-page').then((m) => m.PedidosPage),
+  },
+  {
+    path: 'pedidos/:id',
+    canActivate: [roleGuard(['ASESORA_VENTAS', 'ADMINISTRADORA'])],
+    loadComponent: () =>
+      import('./features/pedidos/detalle-pedido-page/detalle-pedido-page').then((m) => m.DetallePedidoPage),
   },
 
   // IU-05: control de inventario de la Encargada de Inventario.

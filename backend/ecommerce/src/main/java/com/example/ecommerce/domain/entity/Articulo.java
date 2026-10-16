@@ -156,6 +156,20 @@ public class Articulo {
     }
 
     /**
+     * F-07 / RF-07.6: devuelve al inventario las unidades de un pedido
+     * cancelado (lo inverso de {@link #descontarStock(int)}). Se permite aunque
+     * el producto esté desactivado: las unidades existen físicamente.
+     *
+     * @throws CantidadInvalidaException si la cantidad no es mayor que cero
+     */
+    public void reponerStock(int cantidad) {
+        if (cantidad <= 0) {
+            throw new CantidadInvalidaException();
+        }
+        this.stock += cantidad;
+    }
+
+    /**
      * RF-03.4 / RN01: regla única de "¿se puede vender este producto?". La usan
      * el carrito (y luego la confirmación del pedido) para no repetir la lógica.
      *

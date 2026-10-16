@@ -64,13 +64,44 @@
   color: var(--color-text-muted);
 }
 
-.estado {
-  padding: 0.3rem 0.8rem;
-  border-radius: 999px;
-  background: #fff4e0;
-  color: #8a5a00;
-  font-weight: 600;
-  font-size: 0.85rem;
+.motivo {
+  margin: 1rem 0 0;
+  color: var(--color-text-muted);
+}
+
+/* RF-07.8: pasos del pedido, del registro al estado actual. */
+.seguimiento {
+  margin: 0;
+  padding-left: 1.25rem;
+
+  li {
+    padding: 0.2rem 0;
+  }
+
+  .fecha {
+    margin-left: 0.5rem;
+    display: inline;
+  }
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+
+  .btn {
+    margin-top: 1.25rem;
+  }
+}
+
+.btn-peligro {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+
+  &:hover {
+    background: var(--color-danger-bg);
+  }
 }
 
 .fila {

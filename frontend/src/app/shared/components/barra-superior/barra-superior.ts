@@ -15,11 +15,15 @@ interface EnlaceNavegacion {
  * rutas además están protegidas con guards, y la API con @PreAuthorize.)
  */
 const NAVEGACION_POR_ROL: Record<RolUsuario, EnlaceNavegacion[]> = {
-  CLIENTE: [{ ruta: '/', etiqueta: 'Catálogo' }],
+  CLIENTE: [
+    { ruta: '/', etiqueta: 'Catálogo' },
+    { ruta: '/mis-pedidos', etiqueta: 'Mis pedidos' },
+  ],
   ADMINISTRADORA: [
     { ruta: '/dashboard', etiqueta: 'Dashboard' },
     { ruta: '/admin/usuarios', etiqueta: 'Personal' },
     { ruta: '/admin/articulos', etiqueta: 'Productos' },
+    { ruta: '/pedidos', etiqueta: 'Pedidos' },
   ],
   ASESORA_VENTAS: [{ ruta: '/pedidos', etiqueta: 'Pedidos' }],
   ENCARGADA_INVENTARIO: [{ ruta: '/inventario', etiqueta: 'Inventario' }],
