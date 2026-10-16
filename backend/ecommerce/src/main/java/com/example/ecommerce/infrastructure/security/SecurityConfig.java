@@ -58,6 +58,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/articulos/**").permitAll()
                         // RF-02.4: las fotos de los productos se ven sin sesión, igual que el catálogo.
                         .requestMatchers(HttpMethod.GET, "/imagenes/**").permitAll()
+                        // F-04: revisar el carrito no exige sesión (CU-02 permite comprar como invitada
+                        // hasta el momento de confirmar). Solo consulta el inventario, no lo modifica.
+                        .requestMatchers(HttpMethod.POST, "/api/carrito/revision").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
                         // Sin estos handlers, Spring Security responde 403 tanto para

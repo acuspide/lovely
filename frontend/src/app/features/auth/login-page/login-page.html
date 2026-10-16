@@ -38,7 +38,7 @@
     </form>
 
     <p class="enlace-secundario">
-      ¿Aún no tienes cuenta? <a routerLink="/registro">Regístrate</a>
+      ¿Aún no tienes cuenta? <a routerLink="/registro" [queryParams]="rutaRetorno ? { volverA: rutaRetorno } : {}">Regístrate</a>
     </p>
     <p class="enlace-secundario">
       <a routerLink="/">Ver el catálogo sin iniciar sesión</a>

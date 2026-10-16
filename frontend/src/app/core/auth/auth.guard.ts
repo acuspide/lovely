@@ -1,6 +1,8 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 
+import { PARAMETRO_RETORNO } from './ruta-retorno';
+
 import { RolUsuario } from '../models/rol-usuario';
 import { AuthService } from './auth.service';
 
@@ -23,12 +25,13 @@ export const authGuard: CanActivateFn = () => {
  * vez de al login, para no sugerir que debe volver a iniciar sesión.
  */
 export function roleGuard(rolesPermitidos: RolUsuario[]): CanActivateFn {
-  return () => {
+  return (_ruta, estado) => {
     const authService = inject(AuthService);
     const router = inject(Router);
 
     if (!authService.estaAutenticado()) {
-      return router.createUrlTree(['/login']);
+      // RF-04.5: tras iniciar sesión, la persona vuelve a donde iba (p. ej. a confirmar su pedido).
+      return router.createUrlTree(['/login'], { queryParams: { [PARAMETRO_RETORNO]: estado.url } });
     }
     if (!authService.tieneAlgunRol(rolesPermitidos)) {
       return router.createUrlTree([authService.rutaInicio()]);

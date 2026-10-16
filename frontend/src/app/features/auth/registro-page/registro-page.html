@@ -72,7 +72,7 @@
     </form>
 
     <p class="enlace-secundario">
-      ¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a>
+      ¿Ya tienes cuenta? <a routerLink="/login" [queryParams]="rutaRetorno ? { volverA: rutaRetorno } : {}">Inicia sesión</a>
     </p>
   </div>
 </div>

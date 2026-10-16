@@ -7,6 +7,15 @@
   </a>
 
   <nav class="navegacion" aria-label="Navegación principal">
+    @if (muestraCarrito()) {
+      <!-- RF-04.4: acceso al carrito con contador de unidades -->
+      <a routerLink="/carrito" routerLinkActive="activo" class="enlace enlace-carrito">
+        Carrito
+        @if (unidadesCarrito() > 0) {
+          <span class="contador-carrito" aria-label="unidades en el carrito">{{ unidadesCarrito() }}</span>
+        }
+      </a>
+    }
     @if (usuario(); as datos) {
       @for (enlace of enlaces(); track enlace.ruta) {
         <a

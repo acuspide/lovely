@@ -6,6 +6,7 @@ import com.example.ecommerce.application.usecase.CrearArticuloUseCase;
 import com.example.ecommerce.application.usecase.EliminarArticuloUseCase;
 import com.example.ecommerce.application.usecase.ListarArticulosUseCase;
 import com.example.ecommerce.application.usecase.ObtenerArticuloUseCase;
+import com.example.ecommerce.application.usecase.RevisarCarritoUseCase;
 import com.example.ecommerce.domain.repository.ArticuloRepository;
 import com.example.ecommerce.domain.repository.PedidoRepository;
 import com.example.ecommerce.infrastructure.persistence.PedidoRepositoryEnMemoria;
@@ -66,6 +67,11 @@ public class AppConfig {
     @Bean
     public CambiarEstadoArticuloUseCase cambiarEstadoArticuloUseCase(ArticuloRepository articuloRepository) {
         return new CambiarEstadoArticuloUseCase(articuloRepository);
+    }
+
+    @Bean
+    public RevisarCarritoUseCase revisarCarritoUseCase(ArticuloRepository articuloRepository) {
+        return new RevisarCarritoUseCase(articuloRepository);
     }
 
     @Bean

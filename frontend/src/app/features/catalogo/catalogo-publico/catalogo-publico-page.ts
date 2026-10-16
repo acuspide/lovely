@@ -5,9 +5,12 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
+import { AuthService } from '../../../core/auth/auth.service';
+import { CarritoService } from '../../../core/carrito/carrito.service';
 import { extraerMensajeError } from '../../../core/http/mensaje-error';
 import { Articulo } from '../../../core/models/articulo.model';
 import { CATEGORIAS, CategoriaArticulo, ETIQUETAS_CATEGORIA } from '../../../core/models/categoria-articulo';
+import { AvisoCarrito, AvisoCarritoComponent } from '../../../shared/components/aviso-carrito/aviso-carrito';
 import { BarraSuperior } from '../../../shared/components/barra-superior/barra-superior';
 import { UrlImagenPipe } from '../../../shared/pipes/url-imagen.pipe';
 import { ArticuloService, OrdenCatalogo } from '../articulo.service';
@@ -27,16 +30,19 @@ const OPCIONES_ORDEN: { valor: OrdenCatalogo; etiqueta: string }[] = [
  * - RF-03.4: los agotados se ven atenuados, con su aviso, y van al final.
  * - RF-03.5: cada tarjeta lleva al detalle del producto.
  * - RF-03.6 / RF-03.7: orden, contador de resultados y "Limpiar filtros".
+ * - RF-04.1: botón "Agregar al carrito" (solo visitantes y clientas).
  */
 @Component({
   selector: 'app-catalogo-publico-page',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, RouterLink, BarraSuperior, UrlImagenPipe],
+  imports: [ReactiveFormsModule, DecimalPipe, RouterLink, BarraSuperior, UrlImagenPipe, AvisoCarritoComponent],
   templateUrl: './catalogo-publico-page.html',
   styleUrl: './catalogo-publico-page.scss',
 })
 export class CatalogoPublicoPage {
   private readonly articuloService = inject(ArticuloService);
+  private readonly carritoService = inject(CarritoService);
+  private readonly usuario = inject(AuthService).usuarioActual;
 
   protected readonly articulos = signal<Articulo[]>([]);
   protected readonly cargando = signal(true);
@@ -52,6 +58,16 @@ export class CatalogoPublicoPage {
 
   /** RF-03.7: hay algo que limpiar (el orden no cuenta como filtro). */
   protected readonly hayFiltros = computed(() => this.categoriaActiva() !== null || this.textoBuscado() !== '');
+  /** RF-04.1: el personal no compra desde la tienda; visitantes y clientas sí. */
+  protected readonly puedeComprar = computed(() => {
+    const usuario = this.usuario();
+    return usuario === null || usuario.rol === 'CLIENTE';
+  });
+  /** Producto que se está agregando (para deshabilitar su botón mientras responde el backend). */
+  protected readonly agregando = signal<number | null>(null);
+  protected readonly aviso = signal<AvisoCarrito | null>(null);
+  private temporizadorAviso?: ReturnType<typeof setTimeout>;
+
   /** RF-03.7: cuántos de los productos mostrados se pueden comprar ya. */
   protected readonly disponibles = computed(() => this.articulos().filter((a) => !a.agotado).length);
 
@@ -81,6 +97,43 @@ export class CatalogoPublicoPage {
     this.buscador.setValue('', { emitEvent: false });
     this.textoBuscado.set('');
     this.cargar();
+  }
+
+  /** RF-04.1 / RF-04.2: agrega una unidad, verificando stock en tiempo real con el backend. */
+  agregarAlCarrito(articulo: Articulo): void {
+    if (this.agregando() !== null) {
+      return;
+    }
+    this.agregando.set(articulo.id);
+    this.carritoService.agregar(articulo.id).subscribe({
+      next: (resultado) => {
+        this.agregando.set(null);
+        this.mostrarAviso(
+          !resultado.aplicado
+            ? { texto: resultado.mensaje ?? 'Este producto no se puede agregar.', tipo: 'error' }
+            : resultado.mensaje
+              ? { texto: resultado.mensaje, tipo: 'atencion' }
+              : { texto: `«${articulo.nombre}» se agregó al carrito.`, tipo: 'exito' },
+        );
+        if (!resultado.aplicado) {
+          this.cargar(); // el stock cambió: se actualiza el catálogo para mostrarlo agotado
+        }
+      },
+      error: (err: unknown) => {
+        this.agregando.set(null);
+        this.mostrarAviso({ texto: extraerMensajeError(err, 'No se pudo agregar al carrito.'), tipo: 'error' });
+      },
+    });
+  }
+
+  cerrarAviso(): void {
+    this.aviso.set(null);
+  }
+
+  private mostrarAviso(aviso: AvisoCarrito): void {
+    clearTimeout(this.temporizadorAviso);
+    this.aviso.set(aviso);
+    this.temporizadorAviso = setTimeout(() => this.aviso.set(null), 5000);
   }
 
   private cargar(): void {

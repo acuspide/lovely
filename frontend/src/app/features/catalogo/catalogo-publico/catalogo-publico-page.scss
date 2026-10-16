@@ -94,14 +94,9 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 
   &:hover,
-  &:focus-visible {
+  &:focus-within {
     transform: translateY(-2px);
     box-shadow: 0 14px 34px rgba(178, 58, 114, 0.18);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
   }
 
   /* RF-03.4: un agotado se ve claramente no disponible. */
@@ -186,5 +181,33 @@
 
   &.no-disponible {
     color: var(--color-danger);
+  }
+}
+
+/* RF-03.5: la parte superior de la tarjeta es el enlace al detalle. */
+.enlace-producto {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  color: inherit;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+}
+
+/* RF-04.1: botón "Agregar al carrito". */
+.acciones-tarjeta {
+  padding: 0 0.9rem 0.9rem;
+}
+
+.boton-agregar {
+  width: 100%;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
   }
 }

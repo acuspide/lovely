@@ -1,0 +1,110 @@
+<app-barra-superior seccion="Confirmar pedido" />
+
+<main class="contenido">
+  <a routerLink="/carrito" class="volver">← Volver al carrito</a>
+  <h1 class="titulo">Confirmar pedido</h1>
+
+  @if (avisos().length > 0) {
+    <!-- RF-04.7 / CU-02 A3 -->
+    <div class="alerta alerta-atencion" role="status">
+      <strong>Actualizamos tu carrito:</strong>
+      <ul>
+        @for (aviso of avisos(); track aviso) {
+          <li>{{ aviso }}</li>
+        }
+      </ul>
+    </div>
+  }
+  @if (error(); as mensaje) {
+    <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+  }
+  @if (listo(); as mensaje) {
+    <div class="alerta alerta-exito" role="status">{{ mensaje }}</div>
+  }
+
+  @if (cargando()) {
+    <p role="status">Revisando tu carrito…</p>
+  } @else {
+    <div class="disposicion">
+      <!-- RF-04.6: entrega y contacto -->
+      <form class="tarjeta" [formGroup]="form" (ngSubmit)="confirmar()" novalidate>
+        <fieldset class="tipos">
+          <legend>¿Cómo quieres recibir tu pedido?</legend>
+          @for (opcion of opciones; track opcion.valor) {
+            <label class="opcion" [class.elegida]="form.controls.tipo.value === opcion.valor">
+              <input type="radio" formControlName="tipo" [value]="opcion.valor" />
+              <span>
+                <strong>{{ opcion.etiqueta }}</strong>
+                <small>{{ opcion.descripcion }}</small>
+              </span>
+            </label>
+          }
+        </fieldset>
+
+        <h2>Datos de contacto</h2>
+        <div class="campos">
+          <div class="campo">
+            <label for="nombreContacto">Nombre de quien recibe</label>
+            <input id="nombreContacto" type="text" formControlName="nombreContacto" autocomplete="name" />
+            @if (form.controls.nombreContacto.invalid && form.controls.nombreContacto.touched) {
+              <span class="campo-error">Escribe el nombre de quien recibe.</span>
+            }
+          </div>
+          <div class="campo">
+            <label for="telefono">Teléfono</label>
+            <input id="telefono" type="tel" formControlName="telefono" autocomplete="tel" placeholder="300 123 4567" />
+            @if (form.controls.telefono.invalid && form.controls.telefono.touched) {
+              <span class="campo-error">Escribe un celular o fijo colombiano de 10 dígitos.</span>
+            }
+          </div>
+        </div>
+
+        @if (requiereDireccion()) {
+          <h2>Dirección de entrega</h2>
+          <div class="campos">
+            <div class="campo campo-ancho">
+              <label for="direccion">Dirección</label>
+              <input id="direccion" type="text" formControlName="direccion" autocomplete="street-address"
+                     placeholder="Calle 10 # 5-20, barrio Centro" />
+              @if (form.controls.direccion.invalid && form.controls.direccion.touched) {
+                <span class="campo-error">Escribe la dirección de entrega.</span>
+              }
+            </div>
+            <div class="campo">
+              <label for="ciudad">Ciudad</label>
+              <input id="ciudad" type="text" formControlName="ciudad" autocomplete="address-level2" />
+              @if (form.controls.ciudad.invalid && form.controls.ciudad.touched) {
+                <span class="campo-error">Escribe la ciudad.</span>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="campo">
+          <label for="indicaciones">Indicaciones (opcional)</label>
+          <textarea id="indicaciones" rows="2" formControlName="indicaciones"
+                    placeholder="Ej.: apartamento 301, llamar al llegar"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary boton-confirmar" [disabled]="confirmando() || lineas().length === 0">
+          {{ confirmando() ? 'Revisando disponibilidad…' : 'Confirmar pedido' }}
+        </button>
+      </form>
+
+      <aside class="tarjeta resumen" aria-label="Resumen del pedido">
+        <h2>Tu pedido</h2>
+        @for (linea of lineas(); track linea.articuloId) {
+          <div class="fila">
+            <span>{{ linea.cantidad }} × {{ linea.nombre }}</span>
+            <span>$ {{ linea.subtotal | number: '1.0-0' }}</span>
+          </div>
+        }
+        <div class="fila total">
+          <span>Total</span>
+          <span>$ {{ revision()?.total | number: '1.0-0' }}</span>
+        </div>
+        <p class="moneda">Precios en pesos colombianos (COP)</p>
+      </aside>
+    </div>
+  }
+</main>

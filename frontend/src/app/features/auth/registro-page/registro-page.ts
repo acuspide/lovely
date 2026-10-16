@@ -1,9 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { PARAMETRO_RETORNO, rutaRetornoSegura } from '../../../core/auth/ruta-retorno';
 import { extraerMensajeError } from '../../../core/http/mensaje-error';
 import { RequisitosContrasena } from '../../../shared/components/requisitos-contrasena/requisitos-contrasena';
 import {
@@ -32,6 +33,10 @@ interface RegistroForm {
 export class RegistroPage {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  /** RF-04.5: ruta a la que volver tras registrarse (solo rutas internas). */
+  protected readonly rutaRetorno = rutaRetornoSegura(
+    inject(ActivatedRoute).snapshot.queryParamMap.get(PARAMETRO_RETORNO),
+  );
 
   protected readonly enviando = signal(false);
   protected readonly errorGeneral = signal<string | null>(null);
@@ -70,10 +75,14 @@ export class RegistroPage {
     });
   }
 
-  /** Así la nueva clienta no tiene que volver a escribir sus datos; entra directo al catálogo (RF-01.3). */
+  /**
+   * Así la nueva clienta no tiene que volver a escribir sus datos; entra directo al catálogo (RF-01.3)
+   * o, si se registró para comprar, vuelve a confirmar su pedido (RF-04.5).
+   */
   private iniciarSesionTrasRegistro(email: string, contrasena: string): void {
     this.authService.login(email, contrasena).subscribe({
-      next: () => this.router.navigateByUrl(this.authService.rutaInicio(), { replaceUrl: true }),
+      next: () =>
+        this.router.navigateByUrl(this.rutaRetorno ?? this.authService.rutaInicio(), { replaceUrl: true }),
       error: () => this.router.navigateByUrl('/login', { replaceUrl: true }),
     });
   }

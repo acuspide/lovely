@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { extraerMensajeError } from '../../../core/http/mensaje-error';
 import { RUTA_INICIO_POR_ROL } from '../../../core/models/rol-usuario';
 import { VerContrasena } from '../../../shared/directives/ver-contrasena';
+import { PARAMETRO_RETORNO, rutaRetornoSegura } from '../../../core/auth/ruta-retorno';
 
 interface LoginForm {
   email: FormControl<string>;
@@ -31,9 +32,15 @@ export class LoginPage {
 
   protected readonly enviando = signal(false);
   protected readonly errorGeneral = signal<string | null>(null);
+  private readonly parametros = inject(ActivatedRoute).snapshot.queryParamMap;
   protected readonly mensajeInformativo = signal<string | null>(
-    MENSAJES_POR_MOTIVO[inject(ActivatedRoute).snapshot.queryParamMap.get('sesion') ?? ''] ?? null,
+    MENSAJES_POR_MOTIVO[this.parametros.get('sesion') ?? ''] ??
+      (this.parametros.get(PARAMETRO_RETORNO) === '/carrito/confirmar'
+        ? 'Inicia sesión o crea tu cuenta para confirmar tu pedido. Tu carrito se conserva.'
+        : null),
   );
+  /** RF-04.5: ruta a la que volver después de iniciar sesión (solo rutas internas). */
+  protected readonly rutaRetorno = rutaRetornoSegura(this.parametros.get(PARAMETRO_RETORNO));
 
   protected readonly form = new FormGroup<LoginForm>({
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
@@ -54,7 +61,10 @@ export class LoginPage {
 
     this.authService.login(email, contrasena).subscribe({
       // RF-01.3: cada rol entra a su propia pantalla de inicio.
-      next: (respuesta) => this.router.navigateByUrl(RUTA_INICIO_POR_ROL[respuesta.usuario.rol], { replaceUrl: true }),
+      // Si venía de una pantalla protegida (p. ej. confirmar pedido), vuelve allá; el guard
+      // de esa ruta decide si su rol puede entrar.
+      next: (respuesta) =>
+        this.router.navigateByUrl(this.rutaRetorno ?? RUTA_INICIO_POR_ROL[respuesta.usuario.rol], { replaceUrl: true }),
       error: (error: unknown) => {
         this.enviando.set(false);
         this.form.controls.contrasena.reset();

@@ -2,6 +2,7 @@ import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { CarritoService } from '../../../core/carrito/carrito.service';
 import { ETIQUETAS_ROL, RolUsuario } from '../../../core/models/rol-usuario';
 
 interface EnlaceNavegacion {
@@ -37,6 +38,13 @@ export class BarraSuperior {
   readonly seccion = input<string>('');
 
   protected readonly usuario = this.authService.usuarioActual;
+  /** RF-04.4: contador de unidades del carrito. */
+  protected readonly unidadesCarrito = inject(CarritoService).unidades;
+  /** El carrito es para visitantes y clientas; el personal no compra desde la tienda. */
+  protected readonly muestraCarrito = computed(() => {
+    const usuario = this.usuario();
+    return usuario === null || usuario.rol === 'CLIENTE';
+  });
   protected readonly etiquetasRol = ETIQUETAS_ROL;
   protected readonly rutaInicio = computed(() => (this.usuario() ? this.authService.rutaInicio() : '/'));
   protected readonly enlaces = computed(() => {

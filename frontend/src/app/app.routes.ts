@@ -22,6 +22,20 @@ export const routes: Routes = [
       import('./features/catalogo/detalle-producto/detalle-producto-page').then((m) => m.DetalleProductoPage),
   },
 
+  // F-04 / IU-02: carrito, disponible también sin sesión (RF-04.4).
+  {
+    path: 'carrito',
+    pathMatch: 'full',
+    loadComponent: () => import('./features/carrito/carrito-page/carrito-page').then((m) => m.CarritoPage),
+  },
+  // RF-04.5: confirmar exige sesión de Cliente; sin sesión lleva al login y regresa aquí.
+  {
+    path: 'carrito/confirmar',
+    canActivate: [roleGuard(['CLIENTE'])],
+    loadComponent: () =>
+      import('./features/carrito/confirmar-pedido-page/confirmar-pedido-page').then((m) => m.ConfirmarPedidoPage),
+  },
+
   // Pantallas de visitante.
   {
     path: 'login',

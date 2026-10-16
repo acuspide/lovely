@@ -1,0 +1,112 @@
+<app-barra-superior seccion="Mi carrito" />
+
+<main class="contenido">
+  <h1 class="titulo">Mi carrito</h1>
+
+  @if (avisos().length > 0) {
+    <!-- CU-02, cursos alternos A1-A3: lo que cambió desde que se agregó al carrito -->
+    <div class="alerta alerta-atencion" role="status">
+      <strong>Actualizamos tu carrito:</strong>
+      <ul>
+        @for (aviso of avisos(); track aviso) {
+          <li>{{ aviso }}</li>
+        }
+      </ul>
+    </div>
+  }
+
+  @if (error(); as mensaje) {
+    <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+  }
+
+  @if (cargando()) {
+    <p role="status">Revisando tu carrito…</p>
+  } @else if (lineas().length === 0) {
+    <section class="tarjeta vacio">
+      <h2>Tu carrito está vacío</h2>
+      <p>Explora el catálogo y agrega tus productos favoritos.</p>
+      <a routerLink="/" class="btn btn-primary">Ver el catálogo</a>
+    </section>
+  } @else {
+    <div class="disposicion">
+      <section class="tarjeta lista" aria-label="Productos del carrito">
+        <div class="encabezado-lista">
+          <span>{{ revision()?.unidades }} {{ revision()?.unidades === 1 ? 'producto' : 'productos' }} en tu carrito</span>
+          <button type="button" class="enlace-vaciar" (click)="confirmandoVaciar.set(true)">Vaciar carrito</button>
+        </div>
+
+        @for (linea of lineas(); track linea.articuloId) {
+          <article class="linea">
+            <a class="imagen" [routerLink]="['/producto', linea.articuloId]">
+              @if (linea.imagenUrl | urlImagen; as src) {
+                <img [src]="src" [alt]="linea.nombre" />
+              } @else {
+                <span>Sin imagen</span>
+              }
+            </a>
+
+            <div class="datos">
+              @if (linea.categoria) {
+                <span class="categoria">{{ etiquetasCategoria[linea.categoria] }}</span>
+              }
+              <a class="nombre" [routerLink]="['/producto', linea.articuloId]">{{ linea.nombre }}</a>
+              @if (linea.marca) {
+                <span class="marca">{{ linea.marca }}</span>
+              }
+              <span class="unitario">$ {{ linea.precio | number: '1.0-0' }} c/u</span>
+            </div>
+
+            <!-- RF-04.3 / RF-04.2: cantidad entre 1 y el stock disponible -->
+            <div class="cantidad" role="group" [attr.aria-label]="'Cantidad de ' + linea.nombre">
+              <button type="button" class="btn btn-secundario" aria-label="Quitar una unidad"
+                      [disabled]="linea.cantidad <= 1 || actualizando() === linea.articuloId"
+                      (click)="cambiarCantidad(linea.articuloId, linea.cantidad - 1)">−</button>
+              <span class="valor" aria-live="polite">{{ linea.cantidad }}</span>
+              <button type="button" class="btn btn-secundario" aria-label="Agregar una unidad"
+                      [disabled]="linea.cantidad >= linea.stockDisponible || actualizando() === linea.articuloId"
+                      (click)="cambiarCantidad(linea.articuloId, linea.cantidad + 1)">+</button>
+              @if (linea.cantidad >= linea.stockDisponible) {
+                <span class="maximo">Máximo disponible</span>
+              }
+            </div>
+
+            <div class="subtotal">
+              <strong>$ {{ linea.subtotal | number: '1.0-0' }}</strong>
+              <button type="button" class="enlace-eliminar" (click)="eliminar(linea.articuloId)">Eliminar</button>
+            </div>
+          </article>
+        }
+      </section>
+
+      <aside class="tarjeta resumen" aria-label="Resumen del pedido">
+        <h2>Resumen de tu pedido</h2>
+        <div class="fila">
+          <span>Subtotal ({{ revision()?.unidades }} {{ revision()?.unidades === 1 ? 'producto' : 'productos' }})</span>
+          <span>$ {{ revision()?.total | number: '1.0-0' }}</span>
+        </div>
+        <div class="fila nota">
+          <span>Entrega</span>
+          <span>Se elige en el siguiente paso</span>
+        </div>
+        <div class="fila total">
+          <span>Total</span>
+          <span>$ {{ revision()?.total | number: '1.0-0' }}</span>
+        </div>
+        <p class="moneda">Precios en pesos colombianos (COP)</p>
+
+        <button type="button" class="btn btn-primary" (click)="finalizarCompra()">Finalizar compra</button>
+        <a routerLink="/" class="btn btn-secundario">← Seguir comprando</a>
+      </aside>
+    </div>
+  }
+</main>
+
+<app-dialogo-confirmacion
+  [abierto]="confirmandoVaciar()"
+  titulo="Vaciar carrito"
+  mensaje="¿Quieres quitar todos los productos de tu carrito?"
+  textoConfirmar="Sí, vaciar"
+  [peligroso]="true"
+  (confirmar)="vaciar()"
+  (cancelar)="confirmandoVaciar.set(false)"
+/>

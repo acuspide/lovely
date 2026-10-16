@@ -70,33 +70,50 @@
 
     <div class="grilla-productos">
       @for (articulo of articulos(); track articulo.id) {
-        <!-- RF-03.5: toda la tarjeta lleva al detalle -->
-        <a class="tarjeta-producto" [class.agotado]="articulo.agotado" [routerLink]="['/producto', articulo.id]">
-          <div class="imagen-wrapper">
-            @if (articulo.imagenUrl | urlImagen; as src) {
-              <img [src]="src" [alt]="articulo.nombre" loading="lazy" />
-            } @else {
-              <!-- RF-02.4 / CU-01 A4: producto guardado sin imagen. -->
-              <div class="sin-imagen" aria-hidden="true">Sin imagen</div>
-            }
-            @if (articulo.agotado) {
-              <span class="insignia-agotado">Agotado</span>
-            }
-          </div>
-          <div class="info-producto">
-            <span class="categoria-producto">{{ etiquetasCategoria[articulo.categoria] }}</span>
-            <h3>{{ articulo.nombre }}</h3>
-            @if (articulo.marca) {
-              <p class="marca-producto">{{ articulo.marca }}</p>
-            }
-            <p class="precio-producto">$ {{ articulo.precio | number: '1.0-0' }}</p>
-            <!-- RF-03.4 -->
-            <p class="disponibilidad" [class.no-disponible]="articulo.agotado">
-              {{ articulo.agotado ? 'Sin unidades por ahora' : 'Disponible' }}
-            </p>
-          </div>
-        </a>
+        <article class="tarjeta-producto" [class.agotado]="articulo.agotado">
+          <!-- RF-03.5: imagen y datos llevan al detalle -->
+          <a class="enlace-producto" [routerLink]="['/producto', articulo.id]">
+            <div class="imagen-wrapper">
+              @if (articulo.imagenUrl | urlImagen; as src) {
+                <img [src]="src" [alt]="articulo.nombre" loading="lazy" />
+              } @else {
+                <!-- RF-02.4 / CU-01 A4: producto guardado sin imagen. -->
+                <div class="sin-imagen" aria-hidden="true">Sin imagen</div>
+              }
+              @if (articulo.agotado) {
+                <span class="insignia-agotado">Agotado</span>
+              }
+            </div>
+            <div class="info-producto">
+              <span class="categoria-producto">{{ etiquetasCategoria[articulo.categoria] }}</span>
+              <h3>{{ articulo.nombre }}</h3>
+              @if (articulo.marca) {
+                <p class="marca-producto">{{ articulo.marca }}</p>
+              }
+              <p class="precio-producto">$ {{ articulo.precio | number: '1.0-0' }}</p>
+              <!-- RF-03.4 -->
+              <p class="disponibilidad" [class.no-disponible]="articulo.agotado">
+                {{ articulo.agotado ? 'Sin unidades por ahora' : 'Disponible' }}
+              </p>
+            </div>
+          </a>
+          @if (puedeComprar()) {
+            <!-- RF-04.1: un agotado no se puede agregar (RF-03.4) -->
+            <div class="acciones-tarjeta">
+              <button
+                type="button"
+                class="btn btn-primary boton-agregar"
+                [disabled]="articulo.agotado || agregando() === articulo.id"
+                (click)="agregarAlCarrito(articulo)"
+              >
+                {{ articulo.agotado ? 'Agotado' : agregando() === articulo.id ? 'Agregando…' : 'Agregar al carrito' }}
+              </button>
+            </div>
+          }
+        </article>
       }
     </div>
   }
 </main>
+
+<app-aviso-carrito [aviso]="aviso()" (cerrar)="cerrarAviso()" />

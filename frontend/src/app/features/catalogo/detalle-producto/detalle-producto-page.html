@@ -41,9 +41,40 @@
           <p class="disponibilidad">Disponible</p>
         }
 
+        @if (puedeComprar() && !a.agotado) {
+          <!-- RF-04.1 / RF-04.2 -->
+          <div class="compra">
+            @if (maximoAgregable() > 0) {
+              <div class="campo campo-cantidad">
+                <label for="cantidad">Cantidad</label>
+                <div class="selector-cantidad">
+                  <button type="button" class="btn btn-secundario" aria-label="Quitar una unidad"
+                          [disabled]="cantidad() <= 1" (click)="cambiarCantidad(cantidad() - 1)">−</button>
+                  <input id="cantidad" type="number" min="1" [max]="maximoAgregable()" [value]="cantidad()"
+                         (change)="cambiarCantidad($any($event.target).valueAsNumber)" />
+                  <button type="button" class="btn btn-secundario" aria-label="Agregar una unidad"
+                          [disabled]="cantidad() >= maximoAgregable()" (click)="cambiarCantidad(cantidad() + 1)">+</button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-primary" [disabled]="agregando()" (click)="agregarAlCarrito()">
+                {{ agregando() ? 'Agregando…' : 'Agregar al carrito' }}
+              </button>
+            } @else {
+              <p class="nota-carrito">Ya tienes en tu carrito todas las unidades disponibles.</p>
+            }
+            @if (enCarrito() > 0) {
+              <p class="nota-carrito">
+                Tienes {{ enCarrito() }} en tu carrito · <a routerLink="/carrito">Ver carrito</a>
+              </p>
+            }
+          </div>
+        }
+
         <h2 class="subtitulo">Descripción</h2>
         <p class="descripcion">{{ a.descripcion }}</p>
       </div>
     </article>
   }
 </main>
+
+<app-aviso-carrito [aviso]="aviso()" (cerrar)="cerrarAviso()" />
