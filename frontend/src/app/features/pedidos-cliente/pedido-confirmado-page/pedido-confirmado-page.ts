@@ -6,8 +6,9 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EMPTY, catchError, map, switchMap, tap } from 'rxjs';
 
 import { OPCIONES_ENTREGA } from '../../../core/carrito/entrega.model';
+import { guardarArchivo } from '../../../core/http/descarga-archivo';
 import { extraerMensajeError } from '../../../core/http/mensaje-error';
-import { EstadoPedido, Pedido, etiquetaEstadoPedido } from '../../../core/pedidos/pedido.model';
+import { EstadoPedido, Pedido, etiquetaEstadoPedido, nombreArchivoFactura } from '../../../core/pedidos/pedido.model';
 import { PedidoService } from '../../../core/pedidos/pedido.service';
 import { BarraSuperior } from '../../../shared/components/barra-superior/barra-superior';
 import { DialogoCancelarPedido } from '../../../shared/components/dialogo-cancelar-pedido/dialogo-cancelar-pedido';
@@ -19,7 +20,8 @@ import { InsigniaEstadoPedido } from '../../../shared/components/insignia-estado
  * volver a consultarlo desde el enlace del correo (RF-05.6).
  *
  * F-07: muestra el seguimiento del pedido (RF-07.8) y, mientras siga
- * Pendiente, permite cancelarlo con motivo (RF-07.5).
+ * Pendiente, permite cancelarlo con motivo (RF-07.5). F-08 / RF-08.4: una vez
+ * confirmado, permite descargar la factura en PDF.
  *
  * Solo la dueña del pedido puede verlo: el backend responde 404 si es de otra.
  */
@@ -40,6 +42,8 @@ export class PedidoConfirmadoPage {
   protected readonly cancelando = signal(false);
   protected readonly errorCancelacion = signal<string | null>(null);
   protected readonly avisoCancelado = signal(false);
+  protected readonly descargandoFactura = signal(false);
+  protected readonly errorFactura = signal<string | null>(null);
   /** true si se llegó aquí recién confirmando la compra (muestra el agradecimiento). */
   protected readonly recienCreado = inject(Router).getCurrentNavigation()?.extras.state?.['recienCreado'] === true;
 
@@ -71,6 +75,26 @@ export class PedidoConfirmadoPage {
 
   protected etiquetaEstado(estado: EstadoPedido | null): string {
     return estado ? etiquetaEstadoPedido(estado, this.pedido()?.entrega.tipo) : '';
+  }
+
+  /** RF-08.4: descarga la factura; si el pedido era anterior a la facturación, el backend la emite. */
+  protected descargarFactura(): void {
+    const actual = this.pedido();
+    if (!actual || this.descargandoFactura()) {
+      return;
+    }
+    this.descargandoFactura.set(true);
+    this.errorFactura.set(null);
+    this.pedidoService.descargarFactura(actual.id).subscribe({
+      next: (pdf) => {
+        this.descargandoFactura.set(false);
+        guardarArchivo(pdf, nombreArchivoFactura(actual.numeroFactura, actual.numero));
+      },
+      error: (err: unknown) => {
+        this.descargandoFactura.set(false);
+        this.errorFactura.set(extraerMensajeError(err, 'No se pudo descargar la factura.'));
+      },
+    });
   }
 
   /** RF-07.5 / RF-07.6: cancelación por la clienta (solo Pendiente). */

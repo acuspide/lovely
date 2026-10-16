@@ -34,6 +34,12 @@
           </p>
           <div class="acciones">
             <a class="btn btn-secundario" [routerLink]="['/pedido', pedido.id]">Ver detalle</a>
+            @if (pedido.facturaDisponible) {
+              <button type="button" class="btn btn-secundario" [disabled]="descargando() === pedido.id"
+                      (click)="descargarFactura(pedido)">
+                {{ descargando() === pedido.id ? 'Descargando…' : 'Descargar factura' }}
+              </button>
+            }
             @if (pedido.puedeCancelar) {
               <button type="button" class="btn btn-secundario btn-peligro" (click)="abrirCancelacion(pedido)">
                 Cancelar pedido

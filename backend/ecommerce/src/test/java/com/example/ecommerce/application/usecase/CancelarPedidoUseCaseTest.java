@@ -10,10 +10,14 @@ import com.example.ecommerce.domain.valueobject.DetallePedido;
 import com.example.ecommerce.domain.valueobject.EstadoPedido;
 import com.example.ecommerce.domain.valueobject.Precio;
 import com.example.ecommerce.domain.valueobject.QuienCancela;
+import com.example.ecommerce.domain.entity.Factura;
 import com.example.ecommerce.infrastructure.persistence.ArticuloRepositoryEnMemoria;
+import com.example.ecommerce.infrastructure.persistence.FacturaRepositoryEnMemoria;
 import com.example.ecommerce.infrastructure.persistence.PedidoRepositoryEnMemoria;
+import com.example.ecommerce.support.Facturas;
 import com.example.ecommerce.support.GestorTransaccionesDirecto;
 import com.example.ecommerce.support.Pedidos;
+import com.example.ecommerce.support.UsuarioRepositoryEnMemoria;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +27,7 @@ import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** RF-07.5 / RF-07.6: cancelar con motivo y devolver el stock. */
 public class CancelarPedidoUseCaseTest {
@@ -32,6 +37,7 @@ public class CancelarPedidoUseCaseTest {
 
     private ArticuloRepositoryEnMemoria articulos;
     private PedidoRepositoryEnMemoria pedidos;
+    private FacturaRepositoryEnMemoria facturas;
     private CancelarPedidoUseCase useCase;
     private Articulo labial;
     private Articulo base;
@@ -40,8 +46,10 @@ public class CancelarPedidoUseCaseTest {
     void preparar() {
         articulos = new ArticuloRepositoryEnMemoria();
         pedidos = new PedidoRepositoryEnMemoria();
-        useCase = new CancelarPedidoUseCase(pedidos, articulos, new GestorTransaccionesDirecto(),
-                Clock.fixed(Pedidos.AHORA, ZoneOffset.UTC));
+        facturas = new FacturaRepositoryEnMemoria();
+        Clock reloj = Clock.fixed(Pedidos.AHORA, ZoneOffset.UTC);
+        var emisor = new EmisorFacturas(facturas, new UsuarioRepositoryEnMemoria(), Facturas.NEGOCIO, reloj);
+        useCase = new CancelarPedidoUseCase(pedidos, articulos, emisor, new GestorTransaccionesDirecto(), reloj);
         labial = crear("Labial Mate", 10);
         base = crear("Base Líquida", 5);
     }
@@ -73,6 +81,24 @@ public class CancelarPedidoUseCaseTest {
 
         assertEquals(EstadoPedido.CANCELADO, pedidos.obtenerPorId(pedido.getId()).orElseThrow().getEstado());
         assertEquals(10, stockDe(labial));
+    }
+
+    @Test
+    void siElPedidoTeniaFacturaQuedaAnulada() {
+        // RF-08.6
+        Pedido pedido = registrarVendiendo(1, 0);
+        pedido.avanzarA(EstadoPedido.CONFIRMADO, ADMIN, Pedidos.AHORA);
+        pedidos.guardar(pedido);
+        facturas.guardar(Factura.emitir(pedido.getId(), "Camila", "camila@correo.com", "3001234567",
+                Facturas.NEGOCIO.tasaIva(), Pedidos.AHORA));
+
+        useCase.ejecutar(new CancelarPedidoUseCase.Solicitud(
+                pedido.getId(), QuienCancela.ADMINISTRADORA, ADMIN, "Pago rechazado"));
+
+        Factura factura = facturas.buscarPorPedido(pedido.getId()).orElseThrow();
+        assertTrue(factura.estaAnulada());
+        assertEquals(Pedidos.AHORA, factura.getAnuladaEn().orElseThrow());
+        assertEquals(1, facturas.cantidad(), "la factura no se borra: conserva su número");
     }
 
     @Test

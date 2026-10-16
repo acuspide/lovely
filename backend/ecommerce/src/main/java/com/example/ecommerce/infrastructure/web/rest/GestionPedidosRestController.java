@@ -2,6 +2,8 @@ package com.example.ecommerce.infrastructure.web.rest;
 
 import com.example.ecommerce.application.usecase.AvanzarEstadoPedidoUseCase;
 import com.example.ecommerce.application.usecase.CancelarPedidoUseCase;
+import com.example.ecommerce.application.usecase.ConsultarFacturaUseCase;
+import com.example.ecommerce.application.usecase.DescargarFacturaUseCase;
 import com.example.ecommerce.application.usecase.ListarPedidosUseCase;
 import com.example.ecommerce.application.usecase.ObtenerPedidoParaGestionUseCase;
 import com.example.ecommerce.domain.valueobject.EstadoPedido;
@@ -12,6 +14,7 @@ import com.example.ecommerce.infrastructure.web.rest.dto.CancelarPedidoRequest;
 import com.example.ecommerce.infrastructure.web.rest.dto.PedidoGestionResponse;
 import com.example.ecommerce.infrastructure.web.rest.dto.ResumenPedidoGestionResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +39,7 @@ import java.util.Optional;
  *   <li>{@code GET /api/pedidos/gestion/{id}}: detalle con historial (RF-07.2, RF-07.7).</li>
  *   <li>{@code PATCH /api/pedidos/gestion/{id}/estado}: siguiente estado (RF-07.3, RF-07.4).</li>
  *   <li>{@code POST /api/pedidos/gestion/{id}/cancelacion}: cancelar con motivo (RF-07.5, RF-07.6).</li>
+ *   <li>{@code GET /api/pedidos/gestion/{id}/factura}: factura en PDF, solo Administradora (RF-08.5).</li>
  * </ul>
  */
 @RestController
@@ -47,15 +51,21 @@ public class GestionPedidosRestController {
     private final ObtenerPedidoParaGestionUseCase obtenerPedidoParaGestionUseCase;
     private final AvanzarEstadoPedidoUseCase avanzarEstadoPedidoUseCase;
     private final CancelarPedidoUseCase cancelarPedidoUseCase;
+    private final ConsultarFacturaUseCase consultarFacturaUseCase;
+    private final DescargarFacturaUseCase descargarFacturaUseCase;
 
     public GestionPedidosRestController(ListarPedidosUseCase listarPedidosUseCase,
                                         ObtenerPedidoParaGestionUseCase obtenerPedidoParaGestionUseCase,
                                         AvanzarEstadoPedidoUseCase avanzarEstadoPedidoUseCase,
-                                        CancelarPedidoUseCase cancelarPedidoUseCase) {
+                                        CancelarPedidoUseCase cancelarPedidoUseCase,
+                                        ConsultarFacturaUseCase consultarFacturaUseCase,
+                                        DescargarFacturaUseCase descargarFacturaUseCase) {
         this.listarPedidosUseCase = listarPedidosUseCase;
         this.obtenerPedidoParaGestionUseCase = obtenerPedidoParaGestionUseCase;
         this.avanzarEstadoPedidoUseCase = avanzarEstadoPedidoUseCase;
         this.cancelarPedidoUseCase = cancelarPedidoUseCase;
+        this.consultarFacturaUseCase = consultarFacturaUseCase;
+        this.descargarFacturaUseCase = descargarFacturaUseCase;
     }
 
     @GetMapping
@@ -68,7 +78,8 @@ public class GestionPedidosRestController {
 
     @GetMapping("/{id}")
     public PedidoGestionResponse obtener(@PathVariable long id) {
-        return PedidoGestionResponse.desde(obtenerPedidoParaGestionUseCase.ejecutar(id));
+        return PedidoGestionResponse.desde(obtenerPedidoParaGestionUseCase.ejecutar(id),
+                consultarFacturaUseCase.ejecutar(id));
     }
 
     @PatchMapping("/{id}/estado")
@@ -85,5 +96,13 @@ public class GestionPedidosRestController {
         cancelarPedidoUseCase.ejecutar(
                 new CancelarPedidoUseCase.Solicitud(id, QuienCancela.ADMINISTRADORA, usuario.id(), request.motivo()));
         return obtener(id);
+    }
+
+    @GetMapping("/{id}/factura")
+    @PreAuthorize("hasRole('ADMINISTRADORA')")
+    public ResponseEntity<byte[]> descargarFactura(@AuthenticationPrincipal UsuarioAutenticado usuario,
+                                                   @PathVariable long id) {
+        return RespuestaPdf.de(descargarFacturaUseCase.ejecutar(
+                id, new DescargarFacturaUseCase.Solicitante(usuario.id(), false)));
     }
 }

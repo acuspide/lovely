@@ -24,6 +24,9 @@ import java.util.TreeMap;
  *   <li>La Asesora de ventas no cancela (se controla en el endpoint).</li>
  * </ul>
  *
+ * <p>RF-08.6: si el pedido ya tenía factura (estaba Confirmado), la factura
+ * queda anulada.</p>
+ *
  * <p>Todo ocurre en una sola transacción: si algo falla, ni el pedido queda
  * cancelado ni el stock cambia. El pedido se bloquea primero (para que nadie
  * lo avance mientras tanto) y luego los productos en orden de id, igual que
@@ -43,13 +46,15 @@ public class CancelarPedidoUseCase {
 
     private final PedidoRepository pedidoRepository;
     private final ArticuloRepository articuloRepository;
+    private final EmisorFacturas emisorFacturas;
     private final GestorTransacciones transacciones;
     private final Clock reloj;
 
     public CancelarPedidoUseCase(PedidoRepository pedidoRepository, ArticuloRepository articuloRepository,
-                                 GestorTransacciones transacciones, Clock reloj) {
+                                 EmisorFacturas emisorFacturas, GestorTransacciones transacciones, Clock reloj) {
         this.pedidoRepository = pedidoRepository;
         this.articuloRepository = articuloRepository;
+        this.emisorFacturas = emisorFacturas;
         this.transacciones = transacciones;
         this.reloj = reloj;
     }
@@ -67,6 +72,7 @@ public class CancelarPedidoUseCase {
 
             pedido.cancelar(solicitud.quien(), solicitud.usuarioId(), solicitud.motivo(), reloj.instant());
             devolverStock(pedido);
+            emisorFacturas.anularSiExiste(pedido);
             return pedidoRepository.guardar(pedido);
         });
     }

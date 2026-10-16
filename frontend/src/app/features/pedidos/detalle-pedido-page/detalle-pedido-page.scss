@@ -114,3 +114,26 @@
   margin: 0;
   line-height: 1.5;
 }
+
+/* F-08: tarjeta de la factura. */
+.subtitulo {
+  margin-top: 1.5rem;
+}
+
+.texto-suave {
+  color: var(--color-text-muted);
+}
+
+.boton-factura {
+  margin-top: 0.75rem;
+}
+
+.insignia-anulada {
+  margin-left: 0.5rem;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+}

@@ -16,16 +16,21 @@ import java.time.Clock;
  * <p>Quien hace el cambio envía también el estado al que quiere llevarlo. Si
  * otra persona ya lo cambió (por ejemplo, la clienta lo canceló), el paso ya
  * no es el siguiente y se rechaza, en lugar de avanzar a ciegas.</p>
+ *
+ * <p>RF-08.1: al pasar a Confirmado se emite la factura en la misma
+ * transacción: o quedan las dos cosas o ninguna.</p>
  */
 public class AvanzarEstadoPedidoUseCase {
 
     private final PedidoRepository pedidoRepository;
+    private final EmisorFacturas emisorFacturas;
     private final GestorTransacciones transacciones;
     private final Clock reloj;
 
-    public AvanzarEstadoPedidoUseCase(PedidoRepository pedidoRepository, GestorTransacciones transacciones,
-                                      Clock reloj) {
+    public AvanzarEstadoPedidoUseCase(PedidoRepository pedidoRepository, EmisorFacturas emisorFacturas,
+                                      GestorTransacciones transacciones, Clock reloj) {
         this.pedidoRepository = pedidoRepository;
+        this.emisorFacturas = emisorFacturas;
         this.transacciones = transacciones;
         this.reloj = reloj;
     }
@@ -41,7 +46,9 @@ public class AvanzarEstadoPedidoUseCase {
             Pedido pedido = pedidoRepository.obtenerParaActualizar(pedidoId)
                     .orElseThrow(PedidoNoEncontradoException::new);
             pedido.avanzarA(nuevoEstado, usuarioId, reloj.instant());
-            return pedidoRepository.guardar(pedido);
+            Pedido guardado = pedidoRepository.guardar(pedido);
+            emisorFacturas.emitirSiCorresponde(guardado);
+            return guardado;
         });
     }
 }

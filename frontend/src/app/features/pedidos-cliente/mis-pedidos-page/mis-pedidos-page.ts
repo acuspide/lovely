@@ -3,8 +3,9 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { OPCIONES_ENTREGA } from '../../../core/carrito/entrega.model';
+import { guardarArchivo } from '../../../core/http/descarga-archivo';
 import { extraerMensajeError } from '../../../core/http/mensaje-error';
-import { ResumenPedidoCliente } from '../../../core/pedidos/pedido.model';
+import { ResumenPedidoCliente, nombreArchivoFactura } from '../../../core/pedidos/pedido.model';
 import { PedidoService } from '../../../core/pedidos/pedido.service';
 import { BarraSuperior } from '../../../shared/components/barra-superior/barra-superior';
 import { DialogoCancelarPedido } from '../../../shared/components/dialogo-cancelar-pedido/dialogo-cancelar-pedido';
@@ -14,6 +15,7 @@ import { InsigniaEstadoPedido } from '../../../shared/components/insignia-estado
  * RF-07.8: "Mis pedidos" (/mis-pedidos). La clienta ve todos sus pedidos con
  * su estado, del más reciente al más antiguo, y puede cancelar los que siguen
  * Pendientes (RF-07.5), con motivo. Al cancelar, el stock vuelve (RF-07.6).
+ * F-08 / RF-08.4: los pedidos ya confirmados permiten descargar su factura.
  */
 @Component({
   selector: 'app-mis-pedidos-page',
@@ -32,6 +34,8 @@ export class MisPedidosPage {
   protected readonly porCancelar = signal<ResumenPedidoCliente | null>(null);
   protected readonly cancelando = signal(false);
   protected readonly errorCancelacion = signal<string | null>(null);
+  /** Id del pedido cuya factura se está descargando. */
+  protected readonly descargando = signal<number | null>(null);
 
   constructor() {
     this.cargar();
@@ -76,6 +80,25 @@ export class MisPedidosPage {
         this.errorCancelacion.set(extraerMensajeError(err, 'No se pudo cancelar el pedido.'));
         // 409: el pedido ya fue confirmado por la tienda; se actualiza la lista.
         this.cargar();
+      },
+    });
+  }
+
+  /** RF-08.4: descarga la factura en PDF. */
+  protected descargarFactura(pedido: ResumenPedidoCliente): void {
+    if (this.descargando() !== null) {
+      return;
+    }
+    this.error.set(null);
+    this.descargando.set(pedido.id);
+    this.pedidoService.descargarFactura(pedido.id).subscribe({
+      next: (pdf) => {
+        this.descargando.set(null);
+        guardarArchivo(pdf, nombreArchivoFactura(null, pedido.numero));
+      },
+      error: (err: unknown) => {
+        this.descargando.set(null);
+        this.error.set(extraerMensajeError(err, 'No se pudo descargar la factura.'));
       },
     });
   }

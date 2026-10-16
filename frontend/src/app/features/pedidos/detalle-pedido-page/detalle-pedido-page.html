@@ -84,7 +84,28 @@
       </section>
 
       <section class="tarjeta">
-        <h2>Contacto y entrega</h2>
+        <h2>Factura</h2>
+        @if (p.factura; as factura) {
+          <p class="entrega">
+            <strong>{{ factura.numero }}</strong>
+            @if (factura.anulada) {
+              <span class="insignia-anulada">Anulada</span>
+            }
+            <br />Emitida el {{ fecha(factura.emitidaEn) }}
+          </p>
+        } @else {
+          <p class="entrega texto-suave">
+            {{ p.facturaDisponible ? 'Se emitirá al descargarla.' : 'Se emite cuando el pedido se confirma.' }}
+          </p>
+        }
+        @if (puedeDescargarFactura()) {
+          <button type="button" class="btn btn-secundario boton-factura" [disabled]="descargandoFactura()"
+                  (click)="descargarFactura()">
+            {{ descargandoFactura() ? 'Descargando…' : 'Descargar PDF' }}
+          </button>
+        }
+
+        <h2 class="subtitulo">Contacto y entrega</h2>
         <p class="entrega">
           <strong>{{ etiquetaEntrega(p.entrega.tipo) }}</strong><br />
           {{ p.entrega.nombreContacto }} · {{ p.entrega.telefono }}

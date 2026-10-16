@@ -60,6 +60,10 @@ export interface Pedido {
   puedeCancelar: boolean;
   motivoCancelacion: string | null;
   historial: CambioEstadoCliente[];
+  /** F-08: número de la factura (FV-000001), o null si todavía no se emitió. */
+  numeroFactura: string | null;
+  /** RF-08.4: se puede descargar la factura. */
+  facturaDisponible: boolean;
 }
 
 /** RF-07.8: fila de "Mis pedidos" (GET /api/pedidos). */
@@ -72,6 +76,8 @@ export interface ResumenPedidoCliente {
   total: number;
   unidades: number;
   puedeCancelar: boolean;
+  /** RF-08.4: el pedido ya se confirmó, así que tiene factura. */
+  facturaDisponible: boolean;
 }
 
 /** RF-07.1: fila de la lista del personal (GET /api/pedidos/gestion). */
@@ -111,6 +117,10 @@ export interface PedidoGestion {
   entrega: EntregaPedido;
   motivoCancelacion: string | null;
   historial: CambioEstadoGestion[];
+  /** F-08: factura emitida (null si aún no tiene); `anulada` por RF-08.6. */
+  factura: { numero: string; emitidaEn: string; anulada: boolean } | null;
+  /** RF-08.5: se puede descargar (la pantalla solo lo ofrece a la Administradora). */
+  facturaDisponible: boolean;
 }
 
 /** Orden del flujo normal, para el filtro por estado (RF-07.1). */
@@ -166,4 +176,9 @@ export function textoAccionAvanzar(destino: EstadoPedido, tipoEntrega: TipoEntre
     default:
       return 'Pasar a ' + etiquetaEstadoPedido(destino, tipoEntrega);
   }
+}
+
+/** F-08: nombre del PDF al guardarlo. */
+export function nombreArchivoFactura(numeroFactura: string | null, numeroPedido: string): string {
+  return numeroFactura ? `Factura-${numeroFactura}.pdf` : `Factura-pedido-${numeroPedido}.pdf`;
 }

@@ -71,6 +71,14 @@ public enum EstadoPedido {
         return puedeTransicionarA(CANCELADO);
     }
 
+    /**
+     * RF-08.1: el pedido ya pasó por Confirmado (y no se canceló), así que
+     * tiene o debe tener factura.
+     */
+    public boolean yaFueConfirmado() {
+        return this != PENDIENTE && this != CANCELADO;
+    }
+
     /** RN17 / RF-02.9: estados en los que el pedido sigue vigente. */
     public static Set<EstadoPedido> activos() {
         return Set.of(PENDIENTE, CONFIRMADO, EN_PROCESO, EN_CAMINO, ENTREGADO, COMPLETADO);

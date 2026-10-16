@@ -33,6 +33,12 @@
       @if (p.motivoCancelacion) {
         <p class="motivo"><strong>Motivo de la cancelación:</strong> {{ p.motivoCancelacion }}</p>
       }
+      @if (p.numeroFactura) {
+        <p class="motivo">Factura {{ p.numeroFactura }}{{ p.estado === 'CANCELADO' ? ' (anulada)' : '' }}</p>
+      }
+      @if (errorFactura(); as mensaje) {
+        <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+      }
 
       <h3>Productos</h3>
       @for (linea of p.lineas; track linea.articuloId) {
@@ -72,6 +78,11 @@
       <div class="acciones">
         <a routerLink="/mis-pedidos" class="btn btn-secundario">Mis pedidos</a>
         <a routerLink="/" class="btn btn-primary">Seguir comprando</a>
+        @if (p.facturaDisponible) {
+          <button type="button" class="btn btn-secundario" [disabled]="descargandoFactura()" (click)="descargarFactura()">
+            {{ descargandoFactura() ? 'Descargando…' : 'Descargar factura' }}
+          </button>
+        }
         @if (p.puedeCancelar) {
           <button type="button" class="btn btn-secundario btn-peligro" (click)="errorCancelacion.set(null); cancelacionAbierta.set(true)">
             Cancelar pedido

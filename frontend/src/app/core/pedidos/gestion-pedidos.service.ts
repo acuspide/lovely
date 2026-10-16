@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { API_BASE_URL } from '../config/api.config';
+import { conErrorLegible } from '../http/descarga-archivo';
 import { EstadoPedido, PedidoGestion, ResumenPedidoGestion } from './pedido.model';
 
 /**
@@ -39,5 +40,10 @@ export class GestionPedidosService {
   /** RF-07.5 / RF-07.6: cancelación con motivo (solo Administradora). */
   cancelar(id: number, motivo: string): Observable<PedidoGestion> {
     return this.http.post<PedidoGestion>(`${this.base}/${id}/cancelacion`, { motivo });
+  }
+
+  /** RF-08.5: factura en PDF de cualquier pedido (solo Administradora). */
+  descargarFactura(id: number): Observable<Blob> {
+    return conErrorLegible(this.http.get(`${this.base}/${id}/factura`, { responseType: 'blob' }));
   }
 }

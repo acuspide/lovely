@@ -1,6 +1,9 @@
 package com.example.ecommerce.infrastructure.web.rest;
 
 import com.example.ecommerce.application.AlmacenamientoImagenException;
+import com.example.ecommerce.application.GeneradorPdfFactura.GeneracionPdfException;
+import com.example.ecommerce.domain.exception.FacturaDuplicadaException;
+import com.example.ecommerce.domain.exception.FacturaNoDisponibleException;
 import com.example.ecommerce.domain.exception.ArticuloAgotadoException;
 import com.example.ecommerce.domain.exception.ArticuloConPedidosActivosException;
 import com.example.ecommerce.domain.exception.ArticuloInactivoException;
@@ -19,6 +22,8 @@ import com.example.ecommerce.domain.exception.TokenInvalidoException;
 import com.example.ecommerce.domain.exception.UltimaAdministradoraActivaException;
 import com.example.ecommerce.domain.exception.UsuarioInactivoException;
 import com.example.ecommerce.domain.exception.UsuarioNoEncontradoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
@@ -38,6 +43,8 @@ import org.springframework.web.multipart.support.MissingServletRequestPartExcept
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(CredencialesInvalidasException.class)
     public ProblemDetail credencialesInvalidas(CredencialesInvalidasException ex) {
@@ -155,6 +162,20 @@ public class GlobalExceptionHandler {
         ProblemDetail problema = problema(HttpStatus.CONFLICT, ex.getMessage());
         problema.setProperty("accionSugerida", "RECARGAR_PEDIDO");
         return problema;
+    }
+
+    // RF-08.1: el pedido todavía no tiene factura (Pendiente) o se canceló sin confirmarse.
+    @ExceptionHandler({FacturaNoDisponibleException.class, FacturaDuplicadaException.class})
+    public ProblemDetail facturaNoDisponible(RuntimeException ex) {
+        return problema(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    // RF-08.3: falla técnica al dibujar el PDF. La factura ya existe; se puede reintentar.
+    @ExceptionHandler(GeneracionPdfException.class)
+    public ProblemDetail errorGenerandoPdf(GeneracionPdfException ex) {
+        log.error("Error al generar el PDF de una factura", ex);
+        return problema(HttpStatus.INTERNAL_SERVER_ERROR,
+                "No se pudo generar el PDF de la factura. Intenta de nuevo en un momento.");
     }
 
     @ExceptionHandler(PedidoNoEncontradoException.class)
