@@ -18,6 +18,7 @@ import com.example.ecommerce.domain.exception.UltimaAdministradoraActivaExceptio
 import com.example.ecommerce.domain.exception.UsuarioInactivoException;
 import com.example.ecommerce.domain.exception.UsuarioNoEncontradoException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
@@ -135,6 +136,14 @@ public class GlobalExceptionHandler {
         ProblemDetail problema = problema(HttpStatus.CONFLICT, ex.getMessage());
         problema.setProperty("accionSugerida", "REVISAR_CARRITO");
         return problema;
+    }
+
+    // RF-06.5: otra compra tiene bloqueado el producto por más de 5 segundos (mucha demanda).
+    // No se registró nada: la clienta puede reintentar sin riesgo de duplicar (RF-05.7).
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    public ProblemDetail productoOcupado(PessimisticLockingFailureException ex) {
+        return problema(HttpStatus.SERVICE_UNAVAILABLE,
+                "Hay muchas compras de este producto en este momento. Intenta de nuevo en unos segundos.");
     }
 
     @ExceptionHandler(PedidoNoEncontradoException.class)

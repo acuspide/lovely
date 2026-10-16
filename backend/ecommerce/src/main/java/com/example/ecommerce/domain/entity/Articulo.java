@@ -2,9 +2,11 @@ package com.example.ecommerce.domain.entity;
 
 import com.example.ecommerce.domain.exception.ArticuloAgotadoException;
 import com.example.ecommerce.domain.exception.ArticuloInactivoException;
+import com.example.ecommerce.domain.exception.CantidadInvalidaException;
 import com.example.ecommerce.domain.exception.CategoriaRequeridaException;
 import com.example.ecommerce.domain.exception.DescripcionRequeridaException;
 import com.example.ecommerce.domain.exception.PrecioRequeridoException;
+import com.example.ecommerce.domain.exception.StockInsuficienteException;
 import com.example.ecommerce.domain.exception.StockNegativoException;
 import com.example.ecommerce.domain.valueobject.CategoriaArticulo;
 import com.example.ecommerce.domain.valueobject.NombreArticulo;
@@ -128,6 +130,29 @@ public class Articulo {
      */
     public boolean estaAgotado() {
         return stock == 0;
+    }
+
+    /**
+     * F-06 / RF-06.1 y RF-06.3: descuenta las unidades vendidas (CO-02
+     * descontarStock). El stock nunca queda negativo (RN20): si no alcanza, no
+     * cambia nada y se informa cuántas unidades quedan (RF-06.4). Al llegar a
+     * cero, el producto queda agotado automáticamente (RF-06.6 / RN12).
+     *
+     * @throws CantidadInvalidaException   si la cantidad no es mayor que cero (RN19)
+     * @throws ArticuloInactivoException   si el producto está desactivado
+     * @throws StockInsuficienteException  si no hay unidades suficientes
+     */
+    public void descontarStock(int cantidad) {
+        if (cantidad <= 0) {
+            throw new CantidadInvalidaException();
+        }
+        if (!activo) {
+            throw new ArticuloInactivoException();
+        }
+        if (cantidad > stock) {
+            throw new StockInsuficienteException(nombre.getValor(), stock);
+        }
+        this.stock -= cantidad;
     }
 
     /**

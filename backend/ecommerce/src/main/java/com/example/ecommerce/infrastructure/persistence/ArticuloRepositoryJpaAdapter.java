@@ -29,6 +29,11 @@ public class ArticuloRepositoryJpaAdapter implements ArticuloRepository {
     }
 
     @Override
+    public Optional<Articulo> obtenerParaActualizar(long id) {
+        return jpaRepository.findByIdParaActualizar(id).map(ArticuloMapper::aDominio);
+    }
+
+    @Override
     public Optional<Articulo> buscarPorNombre(NombreArticulo nombre) {
         return jpaRepository.findByNombreClave(nombre.clave()).map(ArticuloMapper::aDominio);
     }

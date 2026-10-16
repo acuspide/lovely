@@ -19,6 +19,7 @@ import java.time.Clock;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * F-05: registrar el pedido de una clienta (CU-02 pasos 11 y 12).
@@ -27,15 +28,19 @@ import java.util.Map;
  *   <li>RF-05.7 / CU-02 A5: si ese intento de compra ya se registró (la
  *       clienta reintentó tras un error de conexión), devuelve el mismo
  *       pedido en vez de crear otro.</li>
- *   <li>RF-05.4 / RN01 / RN05 / RN09: cada producto debe estar activo, tener
- *       stock y alcanzar para la cantidad pedida; si no, no se registra nada.</li>
+ *   <li>RF-05.4 / RN01 / RN05 / RN09 / RF-06.4: cada producto debe estar
+ *       activo, tener stock y alcanzar para la cantidad pedida; si no, no se
+ *       registra nada y se informa cuántas unidades quedan.</li>
  *   <li>RF-05.1 a RF-05.3: guarda el pedido en estado Pendiente, con el precio
  *       y nombre de cada producto en ese momento y los datos de entrega.</li>
  *   <li>RF-05.6: después de guardar, envía el correo de confirmación.</li>
  * </ol>
  *
- * <p>Todo ocurre dentro de una transacción. F-06 agregará aquí el descuento
- * del stock, para que pedido y stock cambien juntos o no cambie ninguno.</p>
+ * <p>F-06 (CO-02 descontarStock): en la misma transacción se descuenta el
+ * stock de cada producto (RF-06.1). O se guardan el pedido y todos los
+ * descuentos, o no se guarda nada (RF-06.2). Cada producto se bloquea mientras
+ * se descuenta, para que dos compras simultáneas no vendan la misma última
+ * unidad (RF-06.5).</p>
  */
 public class RegistrarPedidoUseCase {
 
@@ -83,8 +88,30 @@ public class RegistrarPedidoUseCase {
     }
 
     private Pedido registrarEnTransaccion(Solicitud solicitud) {
-        List<DetallePedido> detalles = cantidadesPorArticulo(solicitud.lineas()).entrySet().stream()
-                .map(entrada -> detalleVerificado(entrada.getKey(), entrada.getValue()))
+        Map<Long, Integer> cantidades = cantidadesPorArticulo(solicitud.lineas());
+
+        // 1. Bloquear y verificar TODOS los productos antes de tocar ninguno.
+        //    Se bloquean en orden de id: si dos pedidos comparten productos, los
+        //    piden en el mismo orden y no se quedan esperándose el uno al otro.
+        Map<Long, Articulo> bloqueados = new TreeMap<>();
+        for (long articuloId : new TreeMap<>(cantidades).keySet()) {
+            bloqueados.put(articuloId, bloquearYVerificar(articuloId, cantidades.get(articuloId)));
+        }
+
+        // 2. RF-06.1: descontar. Ya se sabe que todo alcanza, así que no puede
+        //    quedar un descuento a medias (RF-06.2); la transacción es la red de seguridad.
+        bloqueados.forEach((articuloId, articulo) -> {
+            articulo.descontarStock(cantidades.get(articuloId));
+            articuloRepository.guardar(articulo);
+        });
+
+        // 3. RF-05.3: los detalles conservan el orden del carrito y congelan nombre y precio.
+        List<DetallePedido> detalles = cantidades.entrySet().stream()
+                .map(entrada -> {
+                    Articulo articulo = bloqueados.get(entrada.getKey());
+                    return new DetallePedido(entrada.getKey(), articulo.getNombre().getValor(),
+                            entrada.getValue(), articulo.getPrecio());
+                })
                 .toList();
 
         Pedido pedido = Pedido.registrar(solicitud.clienteId(), detalles, solicitud.entrega(),
@@ -92,15 +119,18 @@ public class RegistrarPedidoUseCase {
         return pedidoRepository.guardar(pedido);
     }
 
-    /** RF-05.4: verifica el producto y congela su nombre y precio actuales en el detalle. */
-    private DetallePedido detalleVerificado(long articuloId, int cantidad) {
-        Articulo articulo = articuloRepository.obtenerPorId(articuloId)
+    /**
+     * RF-05.4 / RF-06.4 / RF-06.5: bloquea el producto (para que nadie más lo
+     * descuente al mismo tiempo) y verifica que esté a la venta y alcance.
+     */
+    private Articulo bloquearYVerificar(long articuloId, int cantidad) {
+        Articulo articulo = articuloRepository.obtenerParaActualizar(articuloId)
                 .orElseThrow(ArticuloNoEncontradoException::new);
         articulo.verificarDisponibleParaVenta();
         if (cantidad > articulo.getStock()) {
             throw new StockInsuficienteException(articulo.getNombre().getValor(), articulo.getStock());
         }
-        return new DetallePedido(articuloId, articulo.getNombre().getValor(), cantidad, articulo.getPrecio());
+        return articulo;
     }
 
     /** Si un producto viene repetido, se suman sus cantidades (un detalle por producto). */

@@ -127,4 +127,44 @@ public class ArticuloTest {
         assertThrows(com.example.ecommerce.domain.exception.ArticuloInactivoException.class,
                 articulo::verificarDisponibleParaVenta);
     }
+
+    @Test
+    void descontarStockRestaLasUnidadesVendidas() {
+        // RF-06.1
+        Articulo articulo = crearArticulo(1L, 10);
+
+        articulo.descontarStock(3);
+
+        assertEquals(7, articulo.getStock());
+    }
+
+    @Test
+    void siNoAlcanzaNoDescuentaNadaEInformaCuantasQuedan() {
+        // RF-06.3 / RF-06.4 / RN20
+        Articulo articulo = crearArticulo(1L, 2);
+
+        var error = assertThrows(com.example.ecommerce.domain.exception.StockInsuficienteException.class,
+                () -> articulo.descontarStock(3));
+
+        assertEquals(2, articulo.getStock());
+        assertTrue(error.getMessage().contains("Solo quedan 2 unidades"));
+    }
+
+    @Test
+    void alVenderLaUltimaUnidadQuedaAgotado() {
+        // RF-06.6 / RN12
+        Articulo articulo = crearArticulo(1L, 1);
+
+        articulo.descontarStock(1);
+
+        assertEquals(0, articulo.getStock());
+        assertTrue(articulo.estaAgotado());
+    }
+
+    @Test
+    void laCantidadADescontarDebeSerPositiva() {
+        // RN19
+        assertThrows(com.example.ecommerce.domain.exception.CantidadInvalidaException.class,
+                () -> crearArticulo(1L, 5).descontarStock(0));
+    }
 }

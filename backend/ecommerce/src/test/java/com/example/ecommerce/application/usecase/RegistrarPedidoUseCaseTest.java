@@ -144,4 +144,58 @@ class RegistrarPedidoUseCaseTest {
         assertTrue(pedidos.existePedidoActivoConArticulo(base.getId()));
         assertFalse(pedidos.existePedidoActivoConArticulo(labial.getId()));
     }
+
+    // ---------------- F-06: descuento automático de inventario ----------------
+
+    @Test
+    void alRegistrarElPedidoSeDescuentaElStock() {
+        // RF-06.1
+        useCase.ejecutar(solicitud(Pedidos.claveNueva(), new Linea(labial.getId(), 3), new Linea(base.getId(), 1)));
+
+        assertEquals(7, articulos.obtenerPorId(labial.getId()).orElseThrow().getStock());
+        assertEquals(1, articulos.obtenerPorId(base.getId()).orElseThrow().getStock());
+    }
+
+    @Test
+    void siUnProductoNoAlcanzaNoSeDescuentaNingunoNiSeRegistraElPedido() {
+        // RF-06.2 (CO-02: todo o nada) y RF-06.4
+        StockInsuficienteException error = assertThrows(StockInsuficienteException.class,
+                () -> useCase.ejecutar(solicitud(Pedidos.claveNueva(),
+                        new Linea(labial.getId(), 3), new Linea(base.getId(), 5))));
+
+        assertEquals(10, articulos.obtenerPorId(labial.getId()).orElseThrow().getStock(), "el labial no se tocó");
+        assertEquals(2, articulos.obtenerPorId(base.getId()).orElseThrow().getStock());
+        assertTrue(error.getMessage().contains("Solo quedan 2 unidades de «Base Líquida»"));
+        assertFalse(pedidos.existePedidoActivoConArticulo(labial.getId()));
+    }
+
+    @Test
+    void alVenderLasUltimasUnidadesElProductoQuedaAgotadoEnElCatalogo() {
+        // RF-06.6 / RN12
+        useCase.ejecutar(solicitud(Pedidos.claveNueva(), new Linea(base.getId(), 2)));
+
+        Articulo enCatalogo = new ListarArticulosUseCase(articulos)
+                .ejecutar(java.util.Optional.empty(), java.util.Optional.of("Base")).get(0);
+        assertTrue(enCatalogo.estaAgotado());
+    }
+
+    @Test
+    void despuesDeAgotarseUnaSegundaCompraRecibeElAviso() {
+        // RF-06.5 (versión secuencial; la concurrente está en PedidoConcurrenteIT con Oracle)
+        useCase.ejecutar(solicitud(Pedidos.claveNueva(), new Linea(base.getId(), 2)));
+
+        assertThrows(ArticuloAgotadoException.class,
+                () -> useCase.ejecutar(solicitud(Pedidos.claveNueva(), new Linea(base.getId(), 1))));
+        assertEquals(0, articulos.obtenerPorId(base.getId()).orElseThrow().getStock(), "nunca negativo (RN20)");
+    }
+
+    @Test
+    void unReintentoNoDescuentaElStockDosVeces() {
+        // RF-05.7 + RF-06.1
+        String clave = Pedidos.claveNueva();
+        useCase.ejecutar(solicitud(clave, new Linea(labial.getId(), 2)));
+        useCase.ejecutar(solicitud(clave, new Linea(labial.getId(), 2)));
+
+        assertEquals(8, articulos.obtenerPorId(labial.getId()).orElseThrow().getStock());
+    }
 }

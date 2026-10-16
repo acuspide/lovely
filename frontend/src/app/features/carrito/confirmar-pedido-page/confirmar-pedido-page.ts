@@ -155,7 +155,12 @@ export class ConfirmarPedidoPage {
     // CU-02 A5: sin conexión o error del servidor. Se conserva la clave del intento para reintentar sin duplicar.
     if (!http || http.status === 0 || http.status >= 500) {
       this.puedeReintentar.set(true);
-      this.error.set('No pudimos confirmar tu pedido por un problema de conexión. Reintenta: no se cobrará dos veces.');
+      // 503: el producto está muy solicitado en este instante (RF-06.5); el backend explica qué pasó.
+      this.error.set(
+        http?.status === 503
+          ? extraerMensajeError(err, 'Intenta de nuevo en unos segundos.')
+          : 'No pudimos confirmar tu pedido por un problema de conexión. Reintenta: no se cobrará dos veces.',
+      );
       return;
     }
 
