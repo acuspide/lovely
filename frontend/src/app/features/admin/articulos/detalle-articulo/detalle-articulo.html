@@ -1,0 +1,55 @@
+<dialog
+  #dialogo
+  class="dialogo"
+  aria-labelledby="detalle-titulo"
+  (cancel)="alPresionarEscape($event)"
+  (click)="alHacerClicFuera($event)"
+>
+  <div class="contenido-dialogo">
+    @if (cargando()) {
+      <p role="status">Cargando producto…</p>
+    } @else if (error(); as mensaje) {
+      <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+    } @else if (articulo(); as a) {
+      <div class="encabezado">
+        <div class="imagen">
+          @if (a.imagenUrl | urlImagen; as src) {
+            <img [src]="src" [alt]="a.nombre" />
+          } @else {
+            <span>Sin imagen</span>
+          }
+        </div>
+        <div>
+          <p class="id-producto">Producto #{{ a.id }}</p>
+          <h2 id="detalle-titulo">{{ a.nombre }}</h2>
+          <span class="estado" [class.estado-activo]="a.activo" [class.estado-inactivo]="!a.activo">
+            {{ a.activo ? 'Activo' : 'Inactivo (no se muestra en el catálogo)' }}
+          </span>
+        </div>
+      </div>
+
+      <dl class="datos">
+        <div><dt>Categoría</dt><dd>{{ etiquetasCategoria[a.categoria] }}</dd></div>
+        <div><dt>Marca</dt><dd>{{ a.marca ?? '—' }}</dd></div>
+        <div><dt>Precio</dt><dd>{{ a.precio | number: '1.0-0' }} COP</dd></div>
+        <div>
+          <dt>Stock</dt>
+          <dd>
+            {{ a.stock }} unidades
+            @if (a.agotado) {
+              <span class="insignia-agotado">Agotado</span>
+            }
+          </dd>
+        </div>
+        <div class="dato-ancho"><dt>Descripción</dt><dd class="descripcion">{{ a.descripcion }}</dd></div>
+      </dl>
+    }
+
+    <div class="acciones">
+      <button type="button" class="btn btn-secundario" autofocus (click)="cerrar.emit()">Cerrar</button>
+      @if (articulo(); as a) {
+        <button type="button" class="btn btn-primary" (click)="editar.emit(a)">Editar</button>
+      }
+    </div>
+  </div>
+</dialog>

@@ -25,10 +25,17 @@ public class ArticuloRepositoryEnMemoria implements ArticuloRepository {
         return Optional.ofNullable(articulos.get(id));
     }
 
+    /** En memoria no hay concurrencia que controlar: es igual a obtenerPorId. */
     @Override
-    public Optional<Articulo> buscarPorNombre(String nombre) {
+    public Optional<Articulo> obtenerParaActualizar(long id) {
+        return obtenerPorId(id);
+    }
+
+    @Override
+    public Optional<Articulo> buscarPorNombre(NombreArticulo nombre) {
+        // NombreArticulo.equals compara por clave (RF-02.3).
         return articulos.values().stream()
-                .filter(articulo -> articulo.getNombre().equals(new NombreArticulo(nombre)))
+                .filter(articulo -> articulo.getNombre().equals(nombre))
                 .findFirst();
     }
 

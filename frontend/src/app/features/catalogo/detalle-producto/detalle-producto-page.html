@@ -1,0 +1,80 @@
+<app-barra-superior />
+
+<main class="contenido">
+  <a routerLink="/" class="volver">← Volver al catálogo</a>
+
+  @if (cargando()) {
+    <p role="status">Cargando producto…</p>
+  } @else if (noEncontrado()) {
+    <section class="tarjeta aviso">
+      <h2>Este producto no está disponible</h2>
+      <p>Puede que ya no esté en el catálogo. Mira los demás productos de Lovely Girl.</p>
+      <a routerLink="/" class="btn btn-primary">Ver el catálogo</a>
+    </section>
+  } @else if (error(); as mensaje) {
+    <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+  } @else if (articulo(); as a) {
+    <article class="tarjeta detalle">
+      <div class="imagen" [class.agotado]="a.agotado">
+        @if (a.imagenUrl | urlImagen; as src) {
+          <img [src]="src" [alt]="a.nombre" />
+        } @else {
+          <span class="sin-imagen">Sin imagen</span>
+        }
+        @if (a.agotado) {
+          <span class="insignia-agotado">Agotado</span>
+        }
+      </div>
+
+      <div class="info">
+        <span class="categoria">{{ etiquetasCategoria[a.categoria] }}</span>
+        <h1>{{ a.nombre }}</h1>
+        @if (a.marca) {
+          <p class="marca">{{ a.marca }}</p>
+        }
+        <p class="precio">$ {{ a.precio | number: '1.0-0' }}</p>
+
+        <!-- RF-03.4: disponibilidad -->
+        @if (a.agotado) {
+          <p class="disponibilidad no-disponible">Agotado: por ahora no hay unidades.</p>
+        } @else {
+          <p class="disponibilidad">Disponible</p>
+        }
+
+        @if (puedeComprar() && !a.agotado) {
+          <!-- RF-04.1 / RF-04.2 -->
+          <div class="compra">
+            @if (maximoAgregable() > 0) {
+              <div class="campo campo-cantidad">
+                <label for="cantidad">Cantidad</label>
+                <div class="selector-cantidad">
+                  <button type="button" class="btn btn-secundario" aria-label="Quitar una unidad"
+                          [disabled]="cantidad() <= 1" (click)="cambiarCantidad(cantidad() - 1)">−</button>
+                  <input id="cantidad" type="number" min="1" [max]="maximoAgregable()" [value]="cantidad()"
+                         (change)="cambiarCantidad($any($event.target).valueAsNumber)" />
+                  <button type="button" class="btn btn-secundario" aria-label="Agregar una unidad"
+                          [disabled]="cantidad() >= maximoAgregable()" (click)="cambiarCantidad(cantidad() + 1)">+</button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-primary" [disabled]="agregando()" (click)="agregarAlCarrito()">
+                {{ agregando() ? 'Agregando…' : 'Agregar al carrito' }}
+              </button>
+            } @else {
+              <p class="nota-carrito">Ya tienes en tu carrito todas las unidades disponibles.</p>
+            }
+            @if (enCarrito() > 0) {
+              <p class="nota-carrito">
+                Tienes {{ enCarrito() }} en tu carrito · <a routerLink="/carrito">Ver carrito</a>
+              </p>
+            }
+          </div>
+        }
+
+        <h2 class="subtitulo">Descripción</h2>
+        <p class="descripcion">{{ a.descripcion }}</p>
+      </div>
+    </article>
+  }
+</main>
+
+<app-aviso-carrito [aviso]="aviso()" (cerrar)="cerrarAviso()" />

@@ -1,0 +1,170 @@
+<app-barra-superior seccion="Pedidos" />
+
+<main class="contenido">
+  <a routerLink="/pedidos" class="volver">← Volver a pedidos</a>
+
+  @if (cargando()) {
+    <p role="status">Cargando pedido…</p>
+  } @else if (errorCarga(); as mensaje) {
+    <section class="tarjeta">
+      <h1>{{ mensaje }}</h1>
+    </section>
+  } @else if (pedido(); as p) {
+    <section class="tarjeta">
+      <div class="encabezado">
+        <div>
+          <p class="etiqueta">Pedido</p>
+          <h1>{{ p.numero }}</h1>
+          <p class="fecha">{{ fecha(p.creadoEn) }} · {{ p.clienta.nombre }}</p>
+        </div>
+        <app-insignia-estado-pedido [estado]="p.estado" [tipoEntrega]="p.entrega.tipo" />
+      </div>
+
+      @if (error(); as mensaje) {
+        <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+      }
+      @if (exito(); as mensaje) {
+        <div class="alerta alerta-exito" role="status">{{ mensaje }}</div>
+      }
+
+      <!-- RF-07.3 / RF-07.5: solo las acciones que permite el estado actual. -->
+      @if (p.siguienteEstado || puedeCancelar()) {
+        <div class="acciones-estado">
+          @if (p.siguienteEstado) {
+            <button type="button" class="btn btn-primary" [disabled]="avanzando()" (click)="pedirAvance()">
+              {{ avanzando() ? 'Guardando…' : textoAvanzar() }}
+            </button>
+          }
+          @if (puedeCancelar()) {
+            <button type="button" class="btn btn-secundario btn-peligro" (click)="abrirCancelacion()">Cancelar pedido</button>
+          }
+        </div>
+      } @else {
+        <p class="nota-final">
+          {{ p.estado === 'CANCELADO' ? 'Pedido cancelado: ya no cambia de estado.' : 'Pedido completado: ya no cambia de estado.' }}
+        </p>
+      }
+      @if (p.motivoCancelacion) {
+        <p class="motivo"><strong>Motivo de la cancelación:</strong> {{ p.motivoCancelacion }}</p>
+      }
+    </section>
+
+    <div class="columnas">
+      <!-- RF-07.2 -->
+      <section class="tarjeta">
+        <h2>Productos</h2>
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th class="numero">Cantidad</th>
+              <th class="numero">Precio</th>
+              <th class="numero">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (linea of p.lineas; track linea.articuloId) {
+              <tr>
+                <td>{{ linea.nombre }}</td>
+                <td class="numero">{{ linea.cantidad }}</td>
+                <td class="numero">$ {{ linea.precioUnitario | number: '1.0-0' }}</td>
+                <td class="numero">$ {{ linea.subtotal | number: '1.0-0' }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              <td class="numero">{{ p.unidades }}</td>
+              <td></td>
+              <td class="numero">$ {{ p.total | number: '1.0-0' }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </section>
+
+      <section class="tarjeta">
+        <h2>Factura</h2>
+        @if (p.factura; as factura) {
+          <p class="entrega">
+            <strong>{{ factura.numero }}</strong>
+            @if (factura.anulada) {
+              <span class="insignia-anulada">Anulada</span>
+            }
+            <br />Emitida el {{ fecha(factura.emitidaEn) }}
+          </p>
+        } @else {
+          <p class="entrega texto-suave">
+            {{ p.facturaDisponible ? 'Se emitirá al descargarla.' : 'Se emite cuando el pedido se confirma.' }}
+          </p>
+        }
+        @if (puedeDescargarFactura()) {
+          <button type="button" class="btn btn-secundario boton-factura" [disabled]="descargandoFactura()"
+                  (click)="descargarFactura()">
+            {{ descargandoFactura() ? 'Descargando…' : 'Descargar PDF' }}
+          </button>
+        }
+
+        <h2 class="subtitulo">Contacto y entrega</h2>
+        <p class="entrega">
+          <strong>{{ etiquetaEntrega(p.entrega.tipo) }}</strong><br />
+          {{ p.entrega.nombreContacto }} · {{ p.entrega.telefono }}
+          @if (p.entrega.direccion) {
+            <br />{{ p.entrega.direccion }}, {{ p.entrega.ciudad }}
+          }
+          @if (p.entrega.indicaciones) {
+            <br /><em>{{ p.entrega.indicaciones }}</em>
+          }
+        </p>
+      </section>
+    </div>
+
+    <!-- RF-07.7 -->
+    <section class="tarjeta">
+      <h2>Historial de estados</h2>
+      <div class="tabla-desplazable">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Estado anterior</th>
+              <th>Estado nuevo</th>
+              <th>Quién</th>
+              <th>Motivo</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cambio of p.historial; track $index) {
+              <tr>
+                <td>{{ fecha(cambio.fecha) }}</td>
+                <td>{{ etiquetaEstado(cambio.estadoAnterior) }}</td>
+                <td>{{ etiquetaEstado(cambio.estadoNuevo) }}</td>
+                <td>{{ cambio.usuario }}</td>
+                <td>{{ cambio.motivo ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <app-dialogo-confirmacion
+      [abierto]="confirmandoAvance()"
+      titulo="Cambiar estado"
+      [mensaje]="'¿Pasar el pedido ' + p.numero + ' de «' + etiquetaEstado(p.estado) + '» a «' + etiquetaEstado(p.siguienteEstado) + '»?'"
+      detalle="Los estados solo avanzan: después no se puede volver al anterior."
+      [textoConfirmar]="textoAvanzar()"
+      (confirmar)="confirmarAvance()"
+      (cancelar)="confirmandoAvance.set(false)"
+    />
+
+    <app-dialogo-cancelar-pedido
+      [abierto]="cancelacionAbierta()"
+      [numeroPedido]="p.numero"
+      [enviando]="cancelando()"
+      [error]="errorCancelacion()"
+      (confirmar)="cancelar($event)"
+      (cerrar)="cancelacionAbierta.set(false)"
+    />
+  }
+</main>

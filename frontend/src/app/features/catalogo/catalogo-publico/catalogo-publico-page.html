@@ -1,25 +1,27 @@
-<header class="barra-superior">
-  <h1>Lovely Girl</h1>
-
-  @if (authService.estaAutenticado()) {
-    <a routerLink="/dashboard" class="btn btn-secundario">Mi cuenta</a>
-  } @else {
-    <a routerLink="/login" class="btn btn-secundario">Iniciar sesión</a>
-  }
-</header>
+<app-barra-superior />
 
 <main class="contenido">
-  <div class="filtros">
+  <div class="filtros" role="search">
     <div class="campo campo-buscador">
       <label for="buscador">Buscar</label>
-      <input id="buscador" type="text" [formControl]="buscador" placeholder="Buscar por nombre…" />
+      <input id="buscador" type="search" [formControl]="buscador" placeholder="Buscar por nombre…" />
     </div>
 
-    <div class="categorias">
+    <div class="campo campo-orden">
+      <label for="orden">Ordenar por</label>
+      <select id="orden" [value]="orden()" (change)="ordenarPor($any($event.target).value)">
+        @for (opcion of opcionesOrden; track opcion.valor) {
+          <option [value]="opcion.valor">{{ opcion.etiqueta }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="categorias" role="group" aria-label="Filtrar por categoría">
       <button
         type="button"
         class="chip"
         [class.chip-activo]="categoriaActiva() === null"
+        [attr.aria-pressed]="categoriaActiva() === null"
         (click)="filtrarPorCategoria(null)"
       >
         Todas
@@ -29,6 +31,7 @@
           type="button"
           class="chip"
           [class.chip-activo]="categoriaActiva() === categoria"
+          [attr.aria-pressed]="categoriaActiva() === categoria"
           (click)="filtrarPorCategoria(categoria)"
         >
           {{ etiquetasCategoria[categoria] }}
@@ -37,30 +40,80 @@
     </div>
   </div>
 
-  @if (cargando()) {
+  @if (error(); as mensaje) {
+    <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+  } @else if (cargando()) {
     <p>Cargando catálogo…</p>
   } @else if (articulos().length === 0) {
-    <p class="sin-resultados">No se encontraron productos.</p>
+    <!-- RF-03.7: sin resultados -->
+    <div class="sin-resultados">
+      <p>
+        {{ hayFiltros() ? 'No encontramos productos con esa búsqueda.' : 'Todavía no hay productos en el catálogo.' }}
+      </p>
+      @if (hayFiltros()) {
+        <button type="button" class="btn btn-secundario" (click)="limpiarFiltros()">Ver todo el catálogo</button>
+      }
+    </div>
   } @else {
+    <!-- RF-03.7: contador de resultados -->
+    <div class="resumen" role="status">
+      <span>
+        Mostrando {{ articulos().length }} {{ articulos().length === 1 ? 'producto' : 'productos' }}
+        @if (disponibles() < articulos().length) {
+          · {{ disponibles() }} {{ disponibles() === 1 ? 'disponible' : 'disponibles' }}
+        }
+      </span>
+      @if (hayFiltros()) {
+        <button type="button" class="enlace-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+      }
+    </div>
+
     <div class="grilla-productos">
       @for (articulo of articulos(); track articulo.id) {
-        <article class="tarjeta-producto">
-          <div class="imagen-wrapper">
-            <img [src]="articulo.imagenUrl" [alt]="articulo.nombre" />
-            @if (articulo.agotado) {
-              <span class="insignia-agotado">Agotado</span>
-            }
-          </div>
-          <div class="info-producto">
-            <span class="categoria-producto">{{ etiquetasCategoria[articulo.categoria] }}</span>
-            <h3>{{ articulo.nombre }}</h3>
-            @if (articulo.marca) {
-              <p class="marca-producto">{{ articulo.marca }}</p>
-            }
-            <p class="precio-producto">{{ articulo.precio | number: '1.0-0' }} COP</p>
-          </div>
+        <article class="tarjeta-producto" [class.agotado]="articulo.agotado">
+          <!-- RF-03.5: imagen y datos llevan al detalle -->
+          <a class="enlace-producto" [routerLink]="['/producto', articulo.id]">
+            <div class="imagen-wrapper">
+              @if (articulo.imagenUrl | urlImagen; as src) {
+                <img [src]="src" [alt]="articulo.nombre" loading="lazy" />
+              } @else {
+                <!-- RF-02.4 / CU-01 A4: producto guardado sin imagen. -->
+                <div class="sin-imagen" aria-hidden="true">Sin imagen</div>
+              }
+              @if (articulo.agotado) {
+                <span class="insignia-agotado">Agotado</span>
+              }
+            </div>
+            <div class="info-producto">
+              <span class="categoria-producto">{{ etiquetasCategoria[articulo.categoria] }}</span>
+              <h3>{{ articulo.nombre }}</h3>
+              @if (articulo.marca) {
+                <p class="marca-producto">{{ articulo.marca }}</p>
+              }
+              <p class="precio-producto">$ {{ articulo.precio | number: '1.0-0' }}</p>
+              <!-- RF-03.4 -->
+              <p class="disponibilidad" [class.no-disponible]="articulo.agotado">
+                {{ articulo.agotado ? 'Sin unidades por ahora' : 'Disponible' }}
+              </p>
+            </div>
+          </a>
+          @if (puedeComprar()) {
+            <!-- RF-04.1: un agotado no se puede agregar (RF-03.4) -->
+            <div class="acciones-tarjeta">
+              <button
+                type="button"
+                class="btn btn-primary boton-agregar"
+                [disabled]="articulo.agotado || agregando() === articulo.id"
+                (click)="agregarAlCarrito(articulo)"
+              >
+                {{ articulo.agotado ? 'Agotado' : agregando() === articulo.id ? 'Agregando…' : 'Agregar al carrito' }}
+              </button>
+            </div>
+          }
         </article>
       }
     </div>
   }
 </main>
+
+<app-aviso-carrito [aviso]="aviso()" (cerrar)="cerrarAviso()" />

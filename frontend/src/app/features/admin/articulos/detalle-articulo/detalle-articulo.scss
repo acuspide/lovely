@@ -1,0 +1,115 @@
+.dialogo {
+  border: none;
+  border-radius: var(--radio-borde);
+  box-shadow: var(--sombra-tarjeta);
+  padding: 0;
+  width: min(560px, calc(100vw - 2rem));
+  color: var(--color-text);
+
+  &::backdrop {
+    background: rgba(58, 35, 64, 0.45);
+  }
+}
+
+.contenido-dialogo {
+  padding: 1.75rem;
+}
+
+.encabezado {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
+
+  h2 {
+    margin: 0.15rem 0 0.5rem;
+    color: var(--color-primary-dark);
+    font-size: 1.3rem;
+  }
+}
+
+.imagen {
+  width: 110px;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.id-producto {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.9rem 1.25rem;
+  margin: 0;
+
+  dt {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+
+  dd {
+    margin: 0.15rem 0 0;
+  }
+}
+
+.dato-ancho {
+  grid-column: 1 / -1;
+}
+
+.descripcion {
+  white-space: pre-line;
+  line-height: 1.45;
+}
+
+.estado {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.estado-activo {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.estado-inactivo {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.insignia-agotado {
+  margin-left: 0.4rem;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}

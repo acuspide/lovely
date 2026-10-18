@@ -1,9 +1,5 @@
 @use '../../../../shared/styles/layout';
 
-.barra-superior {
-  @include layout.barra-superior;
-}
-
 .contenido {
   @include layout.contenido-app;
   display: flex;
@@ -11,23 +7,26 @@
   gap: 2rem;
 }
 
-.tarjeta {
-  background: var(--color-surface);
-  border-radius: var(--radio-borde);
-  box-shadow: var(--sombra-tarjeta);
-  padding: 1.75rem;
-
-  h2 {
-    margin-top: 0;
-    color: var(--color-primary-dark);
-  }
+.formulario-cuenta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  align-items: start;
 }
 
-.formulario-alta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  align-items: end;
+.campo-ancho {
+  grid-column: 1 / -1;
+}
+
+.acciones-formulario {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.tabla-contenedor {
+  overflow-x: auto;
 }
 
 .tabla-usuarios {
@@ -40,6 +39,7 @@
     padding: 0.65rem 0.5rem;
     border-bottom: 1px solid var(--color-border);
     font-size: 0.9rem;
+    vertical-align: middle;
   }
 
   th {
@@ -48,11 +48,34 @@
   }
 }
 
+.fila-en-edicion {
+  background: var(--color-bg);
+}
+
+.acciones-fila {
+  white-space: nowrap;
+
+  .btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .btn + .btn {
+    margin-left: 0.5rem;
+  }
+}
+
+.etiqueta-tu {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
 .estado {
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .estado-activo {
@@ -63,4 +86,13 @@
 .estado-inactivo {
   background: var(--color-danger-bg);
   color: var(--color-danger);
+}
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }

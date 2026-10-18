@@ -64,4 +64,90 @@ class ListarArticulosUseCaseTest {
         assertEquals(1, resultado.size());
         assertEquals("Labial Mate", resultado.get(0).getNombre().getValor());
     }
+
+    @Test
+    void buscaSinImportarTildesNiEspacios() {
+        // Arrange (RF-02.5): "Base Líquida" debe aparecer buscando "liquida".
+        ListarArticulosUseCase useCase = new ListarArticulosUseCase(repositoryConDatos());
+
+        // Act
+        List<Articulo> resultado = useCase.ejecutar(Optional.empty(), Optional.of("  liquida "));
+
+        // Assert
+        assertEquals(1, resultado.size());
+        assertEquals("Base Líquida", resultado.get(0).getNombre().getValor());
+    }
+
+    @Test
+    void unaBusquedaEnBlancoNoFiltra() {
+        // Arrange
+        ListarArticulosUseCase useCase = new ListarArticulosUseCase(repositoryConDatos());
+
+        // Act
+        List<Articulo> resultado = useCase.ejecutar(Optional.empty(), Optional.of("   "));
+
+        // Assert
+        assertEquals(3, resultado.size());
+    }
+
+    @Test
+    void devuelveLosProductosEnOrdenAlfabetico() {
+        // Arrange
+        ListarArticulosUseCase useCase = new ListarArticulosUseCase(repositoryConDatos());
+
+        // Act
+        List<String> nombres = useCase.ejecutarParaGestion(Optional.empty(), Optional.empty()).stream()
+                .map(articulo -> articulo.getNombre().getValor())
+                .toList();
+
+        // Assert
+        assertEquals(List.of("Base Líquida", "Labial Mate", "Shampoo Reparador"), nombres);
+    }
+
+    @Test
+    void combinaCategoriaYBusqueda() {
+        // Arrange
+        ListarArticulosUseCase useCase = new ListarArticulosUseCase(repositoryConDatos());
+
+        // Act: "a" está en los tres nombres, pero solo uno es CAPILAR
+        List<Articulo> resultado = useCase.ejecutar(Optional.of(CategoriaArticulo.CAPILAR), Optional.of("a"));
+
+        // Assert
+        assertEquals(1, resultado.size());
+        assertEquals("Shampoo Reparador", resultado.get(0).getNombre().getValor());
+    }
+
+    @Test
+    void ordenaPorPrecioDeMenorAMayorYDeMayorAMenor() {
+        // Arrange (RF-03.6): Labial 20000, Shampoo 25000, Base 30000
+        ListarArticulosUseCase useCase = new ListarArticulosUseCase(repositoryConDatos());
+
+        // Act
+        List<String> ascendente = nombres(useCase.ejecutar(Optional.empty(), Optional.empty(), OrdenCatalogo.PRECIO_MENOR));
+        List<String> descendente = nombres(useCase.ejecutar(Optional.empty(), Optional.empty(), OrdenCatalogo.PRECIO_MAYOR));
+
+        // Assert
+        assertEquals(List.of("Labial Mate", "Shampoo Reparador", "Base Líquida"), ascendente);
+        assertEquals(List.of("Base Líquida", "Shampoo Reparador", "Labial Mate"), descendente);
+    }
+
+    @Test
+    void enElCatalogoLosAgotadosVanAlFinalSinImportarElOrden() {
+        // Arrange (RF-03.4): un producto barato pero agotado
+        ArticuloRepository repository = repositoryConDatos();
+        new CrearArticuloUseCase(repository).ejecutar("Aceite Capilar", "Descripción",
+                new Precio(new BigDecimal("5000")), CategoriaArticulo.CAPILAR, null, null, 0);
+        ListarArticulosUseCase useCase = new ListarArticulosUseCase(repository);
+
+        // Act: aunque es el más barato, no debe salir primero
+        List<String> resultado = nombres(useCase.ejecutar(Optional.empty(), Optional.empty(), OrdenCatalogo.PRECIO_MENOR));
+
+        // Assert
+        assertEquals("Aceite Capilar", resultado.get(resultado.size() - 1));
+        assertEquals("Labial Mate", resultado.get(0));
+    }
+
+    private static List<String> nombres(List<Articulo> articulos) {
+        return articulos.stream().map(articulo -> articulo.getNombre().getValor()).toList();
+    }
 }

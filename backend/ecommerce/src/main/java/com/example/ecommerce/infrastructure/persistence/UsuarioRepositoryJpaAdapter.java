@@ -4,9 +4,11 @@ import com.example.ecommerce.domain.entity.Usuario;
 import com.example.ecommerce.domain.repository.UsuarioRepository;
 import com.example.ecommerce.domain.valueobject.Email;
 import com.example.ecommerce.infrastructure.persistence.jpa.UsuarioJpaEntity;
+import com.example.ecommerce.infrastructure.persistence.jpa.UsuarioJpaEntity.RolJpa;
 import com.example.ecommerce.infrastructure.persistence.jpa.UsuarioJpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,8 +33,18 @@ public class UsuarioRepositoryJpaAdapter implements UsuarioRepository {
     }
 
     @Override
+    public List<Usuario> obtenerPorIds(Collection<Long> ids) {
+        return jpaRepository.findAllById(ids).stream().map(UsuarioMapper::aDominio).toList();
+    }
+
+    @Override
     public Optional<Usuario> buscarPorEmail(Email email) {
         return jpaRepository.findByEmail(email.getValor()).map(UsuarioMapper::aDominio);
+    }
+
+    @Override
+    public Optional<Usuario> buscarPorEmailParaActualizar(Email email) {
+        return jpaRepository.findByEmailParaActualizar(email.getValor()).map(UsuarioMapper::aDominio);
     }
 
     @Override
@@ -41,10 +53,15 @@ public class UsuarioRepositoryJpaAdapter implements UsuarioRepository {
     }
 
     @Override
-    public List<Usuario> listarTodos() {
-        return jpaRepository.findAll().stream()
+    public List<Usuario> listarPersonal() {
+        return jpaRepository.findByRolNotOrderByNombreAsc(RolJpa.CLIENTE).stream()
                 .map(UsuarioMapper::aDominio)
                 .toList();
+    }
+
+    @Override
+    public long contarAdministradorasActivas() {
+        return jpaRepository.countByRolAndActivoTrue(RolJpa.ADMINISTRADORA);
     }
 
     @Override

@@ -5,13 +5,24 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
  * Patrón: Strategy — implementación concreta e intercambiable del puerto
- * PasswordHasher. RNF-05 exige bcrypt explícitamente; si en el futuro se
- * quisiera Argon2 u otro algoritmo, solo se cambia esta clase (OCP): los
- * casos de uso que dependen de PasswordHasher no se tocan.
+ * PasswordHasher. RF-01.5 / RNF-05 exigen bcrypt con un factor de costo de al
+ * menos 10; si en el futuro se quisiera otro algoritmo, solo se cambia esta
+ * clase (OCP).
  */
 public class BCryptPasswordHasher implements PasswordHasher {
 
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    /** RF-01.5: costo mínimo aceptado. */
+    public static final int COSTO_MINIMO = 10;
+
+    private final BCryptPasswordEncoder encoder;
+
+    public BCryptPasswordHasher(int costo) {
+        if (costo < COSTO_MINIMO) {
+            throw new IllegalArgumentException(
+                    "El costo de bcrypt debe ser al menos " + COSTO_MINIMO + " (RF-01.5); se configuró " + costo + ".");
+        }
+        this.encoder = new BCryptPasswordEncoder(costo);
+    }
 
     @Override
     public String hash(String contrasenaPlano) {
@@ -20,6 +31,6 @@ public class BCryptPasswordHasher implements PasswordHasher {
 
     @Override
     public boolean verificar(String contrasenaPlano, String hashAlmacenado) {
-        return encoder.matches(contrasenaPlano, hashAlmacenado);
+        return contrasenaPlano != null && encoder.matches(contrasenaPlano, hashAlmacenado);
     }
 }

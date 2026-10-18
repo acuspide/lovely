@@ -1,0 +1,52 @@
+<div class="pagina-auth">
+  <div class="tarjeta-auth">
+    <div class="marca-auth">
+      <h1>Lovely Girl</h1>
+      <p>Crea una contraseña nueva</p>
+    </div>
+
+    @if (!tieneToken) {
+      <div class="alerta alerta-error" role="alert">
+        El enlace de recuperación no es válido. Abre el enlace completo que llegó a tu correo o solicita uno nuevo.
+      </div>
+      <a routerLink="/recuperar-contrasena" class="btn btn-primary">Solicitar un enlace nuevo</a>
+    } @else {
+      @if (error(); as mensaje) {
+        <div class="alerta alerta-error" role="alert">
+          {{ mensaje }}
+          <a routerLink="/recuperar-contrasena">Solicitar un enlace nuevo</a>
+        </div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="enviar()" class="formulario" novalidate>
+        <div class="campo">
+          <label for="nuevaContrasena">Nueva contraseña</label>
+          <input
+            id="nuevaContrasena"
+            type="password"
+            formControlName="nuevaContrasena"
+            autocomplete="new-password"
+            aria-describedby="requisitos-restablecer"
+          />
+          <app-requisitos-contrasena [valor]="contrasenaEscrita()" idLista="requisitos-restablecer" />
+        </div>
+
+        <div class="campo">
+          <label for="confirmarContrasena">Confirmar contraseña</label>
+          <input id="confirmarContrasena" type="password" formControlName="confirmarContrasena" autocomplete="new-password" />
+          @if (form.errors?.['noCoinciden'] && form.controls.confirmarContrasena.touched) {
+            <span class="campo-error">Las contraseñas no coinciden.</span>
+          }
+        </div>
+
+        <button type="submit" class="btn btn-primary" [disabled]="enviando()">
+          {{ enviando() ? 'Guardando…' : 'Guardar contraseña' }}
+        </button>
+      </form>
+    }
+
+    <p class="enlace-secundario">
+      <a routerLink="/login">Volver a iniciar sesión</a>
+    </p>
+  </div>
+</div>

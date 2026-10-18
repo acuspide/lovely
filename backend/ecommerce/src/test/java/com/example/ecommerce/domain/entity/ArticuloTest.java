@@ -56,11 +56,11 @@ public class ArticuloTest {
         articulo.actualizar(
                 new NombreArticulo("Labial Mate Rojo"), "Nueva descripción",
                 new Precio(new BigDecimal("22000")), CategoriaArticulo.MAQUILLAJE,
-                "Maybelline", "https://ejemplo.com/labial-rojo.jpg", 5);
+                "Maybelline", "https://ejemplo.com/labial-rojo.jpg");
 
         // Assert
         assertEquals("Labial Mate Rojo", articulo.getNombre().getValor());
-        assertEquals(5, articulo.getStock());
+        assertEquals(10, articulo.getStock(), "RF-02.6: editar no cambia el stock");
     }
 
     @Test
@@ -80,11 +80,14 @@ public class ArticuloTest {
     }
 
     @Test
-    void noDebeCrearArticuloSinImagen() {
-        assertThrows(ReglaDominioException.class, () -> new Articulo(
+    void laImagenEsOpcionalYUnTextoVacioSeGuardaComoSinImagen() {
+        // RF-02.4 / CU-01 A4: se puede continuar sin imagen.
+        Articulo articulo = new Articulo(
                 1L, new NombreArticulo("Labial"), "Descripción",
                 new Precio(new BigDecimal("20000")), CategoriaArticulo.MAQUILLAJE,
-                null, " ", 10));
+                null, " ", 10);
+
+        assertNull(articulo.getImagenUrl());
     }
 
     @Test
@@ -100,5 +103,68 @@ public class ArticuloTest {
                 null, "https://ejemplo.com/labial.jpg", 10);
 
         assertNull(articulo.getMarca());
+    }
+
+    @Test
+    void unProductoConStockSePuedeVender() {
+        // RF-03.4
+        assertDoesNotThrow(() -> crearArticulo(1L, 5).verificarDisponibleParaVenta());
+    }
+
+    @Test
+    void unProductoAgotadoNoSePuedeVender() {
+        // RF-03.4 / RN01 / RN12
+        assertThrows(com.example.ecommerce.domain.exception.ArticuloAgotadoException.class,
+                () -> crearArticulo(1L, 0).verificarDisponibleParaVenta());
+    }
+
+    @Test
+    void unProductoInactivoNoSePuedeVenderAunqueTengaStock() {
+        // RF-02.7
+        Articulo articulo = crearArticulo(1L, 5);
+        articulo.desactivar();
+
+        assertThrows(com.example.ecommerce.domain.exception.ArticuloInactivoException.class,
+                articulo::verificarDisponibleParaVenta);
+    }
+
+    @Test
+    void descontarStockRestaLasUnidadesVendidas() {
+        // RF-06.1
+        Articulo articulo = crearArticulo(1L, 10);
+
+        articulo.descontarStock(3);
+
+        assertEquals(7, articulo.getStock());
+    }
+
+    @Test
+    void siNoAlcanzaNoDescuentaNadaEInformaCuantasQuedan() {
+        // RF-06.3 / RF-06.4 / RN20
+        Articulo articulo = crearArticulo(1L, 2);
+
+        var error = assertThrows(com.example.ecommerce.domain.exception.StockInsuficienteException.class,
+                () -> articulo.descontarStock(3));
+
+        assertEquals(2, articulo.getStock());
+        assertTrue(error.getMessage().contains("Solo quedan 2 unidades"));
+    }
+
+    @Test
+    void alVenderLaUltimaUnidadQuedaAgotado() {
+        // RF-06.6 / RN12
+        Articulo articulo = crearArticulo(1L, 1);
+
+        articulo.descontarStock(1);
+
+        assertEquals(0, articulo.getStock());
+        assertTrue(articulo.estaAgotado());
+    }
+
+    @Test
+    void laCantidadADescontarDebeSerPositiva() {
+        // RN19
+        assertThrows(com.example.ecommerce.domain.exception.CantidadInvalidaException.class,
+                () -> crearArticulo(1L, 5).descontarStock(0));
     }
 }

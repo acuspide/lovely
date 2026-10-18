@@ -1,0 +1,71 @@
+<app-barra-superior seccion="Pedidos" />
+
+<main class="contenido">
+  <section class="tarjeta">
+    <h2>Pedidos</h2>
+
+    <!-- RF-07.1: filtro por estado y búsqueda por número o clienta. -->
+    <div class="filtros-panel" role="search">
+      <div class="campo filtro-busqueda">
+        <label for="buscar-pedido">Buscar por número o clienta</label>
+        <input id="buscar-pedido" type="search" [formControl]="buscador" placeholder="Ej.: LG-000012, 12 o María" />
+      </div>
+      <div class="campo">
+        <label for="filtro-estado-pedido">Estado</label>
+        <select id="filtro-estado-pedido" [value]="estadoFiltro() ?? ''" (change)="filtrarPorEstado($any($event.target).value)">
+          <option value="">Todos</option>
+          @for (estado of estados; track estado) {
+            <option [value]="estado">{{ etiquetasEstado[estado] }}</option>
+          }
+        </select>
+      </div>
+      @if (hayFiltros()) {
+        <button type="button" class="btn btn-secundario boton-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+      }
+    </div>
+
+    @if (error(); as mensaje) {
+      <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+    }
+
+    @if (cargando()) {
+      <p role="status">Cargando pedidos…</p>
+    } @else if (pedidos().length === 0) {
+      <p class="sin-resultados">
+        {{ hayFiltros() ? 'Ningún pedido coincide con la búsqueda.' : 'Todavía no hay pedidos.' }}
+      </p>
+    } @else {
+      <p class="conteo" role="status">
+        {{ pedidos().length }} {{ pedidos().length === 1 ? 'pedido' : 'pedidos' }}
+      </p>
+      <div class="tabla-desplazable">
+        <table class="tabla-pedidos">
+          <thead>
+            <tr>
+              <th>Número</th>
+              <th>Clienta</th>
+              <th>Fecha</th>
+              <th>Entrega</th>
+              <th class="numero">Total</th>
+              <th>Estado</th>
+              <th><span class="solo-lectores">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (pedido of pedidos(); track pedido.id) {
+              <tr>
+                <td class="numero-pedido">{{ pedido.numero }}</td>
+                <td>{{ pedido.clienta }}</td>
+                <td>{{ fecha(pedido.creadoEn) }}</td>
+                <td>{{ etiquetaEntrega(pedido.tipoEntrega) }}</td>
+                <td class="numero">$ {{ pedido.total | number: '1.0-0' }}</td>
+                <td><app-insignia-estado-pedido [estado]="pedido.estado" [tipoEntrega]="pedido.tipoEntrega" /></td>
+                <td><a class="btn btn-secundario" [routerLink]="['/pedidos', pedido.id]">Ver</a></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</main>

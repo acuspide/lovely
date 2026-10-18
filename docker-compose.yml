@@ -20,5 +20,15 @@ services:
       retries: 10
       start_period: 60s
 
+  # RF-01.8: servidor SMTP de desarrollo. Atrapa los correos de recuperacion
+  # de contrasena (puerto 1025) y los muestra en http://localhost:8025 sin
+  # enviarlos de verdad.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: lovely-girl-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 volumes:
   oracle-data:

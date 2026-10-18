@@ -1,0 +1,103 @@
+<app-barra-superior seccion="Mi pedido" />
+
+<main class="contenido">
+  @if (cargando()) {
+    <p role="status">Cargando tu pedido…</p>
+  } @else if (error(); as mensaje) {
+    <section class="tarjeta">
+      <h1>{{ mensaje }}</h1>
+      <a routerLink="/" class="btn btn-primary">Ir al catálogo</a>
+    </section>
+  } @else if (pedido(); as p) {
+    @if (recienCreado) {
+      <!-- CU-02 paso 12 -->
+      <section class="tarjeta agradecimiento" role="status">
+        <h1>¡Gracias por tu compra!</h1>
+        <p>Registramos tu pedido <strong>{{ p.numero }}</strong>. Te enviamos un correo con el resumen.</p>
+      </section>
+    }
+
+    <section class="tarjeta">
+      <div class="encabezado">
+        <div>
+          <p class="etiqueta">Pedido</p>
+          <h2>{{ p.numero }}</h2>
+          <p class="fecha">{{ fecha(p.creadoEn) }}</p>
+        </div>
+        <app-insignia-estado-pedido [estado]="p.estado" [tipoEntrega]="p.entrega.tipo" />
+      </div>
+
+      @if (avisoCancelado()) {
+        <div class="alerta alerta-exito" role="status">Tu pedido quedó cancelado.</div>
+      }
+      @if (p.motivoCancelacion) {
+        <p class="motivo"><strong>Motivo de la cancelación:</strong> {{ p.motivoCancelacion }}</p>
+      }
+      @if (p.numeroFactura) {
+        <p class="motivo">Factura {{ p.numeroFactura }}{{ p.estado === 'CANCELADO' ? ' (anulada)' : '' }}</p>
+      }
+      @if (errorFactura(); as mensaje) {
+        <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+      }
+
+      <h3>Productos</h3>
+      @for (linea of p.lineas; track linea.articuloId) {
+        <div class="fila">
+          <span>{{ linea.cantidad }} × {{ linea.nombre }}</span>
+          <span>$ {{ linea.subtotal | number: '1.0-0' }}</span>
+        </div>
+      }
+      <div class="fila total">
+        <span>Total ({{ p.unidades }} {{ p.unidades === 1 ? 'producto' : 'productos' }})</span>
+        <span>$ {{ p.total | number: '1.0-0' }}</span>
+      </div>
+
+      <h3>Entrega</h3>
+      <p class="entrega">
+        <strong>{{ etiquetaEntrega(p.entrega.tipo) }}</strong><br />
+        {{ p.entrega.nombreContacto }} · {{ p.entrega.telefono }}
+        @if (p.entrega.direccion) {
+          <br />{{ p.entrega.direccion }}, {{ p.entrega.ciudad }}
+        }
+        @if (p.entrega.indicaciones) {
+          <br /><em>{{ p.entrega.indicaciones }}</em>
+        }
+      </p>
+
+      <!-- RF-07.8: seguimiento del pedido. -->
+      <h3>Seguimiento</h3>
+      <ol class="seguimiento">
+        @for (cambio of p.historial; track $index) {
+          <li>
+            <strong>{{ etiquetaEstado(cambio.estadoNuevo) }}</strong>
+            <span class="fecha">{{ fecha(cambio.fecha) }}</span>
+          </li>
+        }
+      </ol>
+
+      <div class="acciones">
+        <a routerLink="/mis-pedidos" class="btn btn-secundario">Mis pedidos</a>
+        <a routerLink="/" class="btn btn-primary">Seguir comprando</a>
+        @if (p.facturaDisponible) {
+          <button type="button" class="btn btn-secundario" [disabled]="descargandoFactura()" (click)="descargarFactura()">
+            {{ descargandoFactura() ? 'Descargando…' : 'Descargar factura' }}
+          </button>
+        }
+        @if (p.puedeCancelar) {
+          <button type="button" class="btn btn-secundario btn-peligro" (click)="errorCancelacion.set(null); cancelacionAbierta.set(true)">
+            Cancelar pedido
+          </button>
+        }
+      </div>
+    </section>
+
+    <app-dialogo-cancelar-pedido
+      [abierto]="cancelacionAbierta()"
+      [numeroPedido]="p.numero"
+      [enviando]="cancelando()"
+      [error]="errorCancelacion()"
+      (confirmar)="cancelar($event)"
+      (cerrar)="cancelacionAbierta.set(false)"
+    />
+  }
+</main>

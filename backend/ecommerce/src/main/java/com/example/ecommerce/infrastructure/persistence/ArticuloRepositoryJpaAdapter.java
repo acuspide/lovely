@@ -2,6 +2,7 @@ package com.example.ecommerce.infrastructure.persistence;
 
 import com.example.ecommerce.domain.entity.Articulo;
 import com.example.ecommerce.domain.repository.ArticuloRepository;
+import com.example.ecommerce.domain.valueobject.NombreArticulo;
 import com.example.ecommerce.infrastructure.persistence.jpa.ArticuloJpaEntity;
 import com.example.ecommerce.infrastructure.persistence.jpa.ArticuloJpaRepository;
 import org.springframework.stereotype.Repository;
@@ -28,8 +29,13 @@ public class ArticuloRepositoryJpaAdapter implements ArticuloRepository {
     }
 
     @Override
-    public Optional<Articulo> buscarPorNombre(String nombre) {
-        return jpaRepository.findByNombre(nombre).map(ArticuloMapper::aDominio);
+    public Optional<Articulo> obtenerParaActualizar(long id) {
+        return jpaRepository.findByIdParaActualizar(id).map(ArticuloMapper::aDominio);
+    }
+
+    @Override
+    public Optional<Articulo> buscarPorNombre(NombreArticulo nombre) {
+        return jpaRepository.findByNombreClave(nombre.clave()).map(ArticuloMapper::aDominio);
     }
 
     @Override

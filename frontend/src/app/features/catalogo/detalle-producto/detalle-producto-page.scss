@@ -1,0 +1,164 @@
+@use '../../../shared/styles/layout';
+
+.contenido {
+  @include layout.contenido-app;
+  max-width: 1000px;
+}
+
+.volver {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.tarjeta {
+  background: var(--color-surface);
+  border-radius: var(--radio-borde);
+  box-shadow: var(--sombra-tarjeta);
+  padding: 1.75rem;
+}
+
+.aviso h2 {
+  margin-top: 0;
+  color: var(--color-primary-dark);
+}
+
+.detalle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2rem;
+}
+
+.imagen {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &.agotado img {
+    filter: grayscale(0.7);
+    opacity: 0.6;
+  }
+}
+
+.sin-imagen {
+  color: var(--color-text-muted);
+}
+
+.insignia-agotado {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    color: var(--color-text);
+  }
+}
+
+.categoria {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.marca {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.precio {
+  margin: 0.5rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.disponibilidad {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-success);
+
+  &.no-disponible {
+    color: var(--color-danger);
+  }
+}
+
+.subtitulo {
+  margin: 1.25rem 0 0;
+  font-size: 1rem;
+  color: var(--color-primary-dark);
+}
+
+.descripcion {
+  margin: 0;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+/* RF-04.1 / RF-04.2: selector de cantidad y botón de compra. */
+.compra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
+  margin-top: 1rem;
+}
+
+.selector-cantidad {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  input {
+    width: 4.5rem;
+    text-align: center;
+  }
+
+  .btn {
+    padding: 0.45rem 0.8rem;
+  }
+}
+
+.nota-carrito {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+
+  a {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+}

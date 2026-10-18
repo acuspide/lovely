@@ -8,5 +8,13 @@ public enum RolUsuario {
     CLIENTE,
     ASESORA_VENTAS,
     ENCARGADA_INVENTARIO,
-    ADMINISTRADORA
+    ADMINISTRADORA;
+
+    /**
+     * RF-01.2: el personal (todo rol distinto de Cliente) no se registra por su
+     * cuenta; solo la Administradora crea y gestiona estas cuentas.
+     */
+    public boolean esPersonal() {
+        return this != CLIENTE;
+    }
 }

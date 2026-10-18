@@ -29,6 +29,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	// RF-01.8: correo de recuperacion de contrasena (adaptador NotificadorCorreoSmtp).
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'org.flywaydb:flyway-database-oracle'
 	// Spring Boot 4 modulariza spring-boot-autoconfigure: la integracion con
 	// Flyway (que antes venia incluida siempre) ahora es un artefacto aparte.
@@ -40,6 +42,9 @@ dependencies {
 	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
 
 	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+
+	// F-08 / RF-08.3: factura en PDF (adaptador GeneradorPdfFacturaOpenPdf).
+	implementation 'com.github.librepdf:openpdf:1.3.30'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
@@ -54,4 +59,9 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+// Limita la memoria de la app Spring Boot al correr con ./gradlew bootRun.
+tasks.named('bootRun') {
+	jvmArgs = ['-Xmx512m', '-XX:MaxMetaspaceSize=256m']
 }

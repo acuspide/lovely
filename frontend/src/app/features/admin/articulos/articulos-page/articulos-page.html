@@ -1,14 +1,16 @@
-<header class="barra-superior">
-  <h1>Lovely Girl · Productos</h1>
-  <a routerLink="/dashboard" class="btn btn-secundario">Volver</a>
-</header>
+<app-barra-superior seccion="Productos" />
 
 <main class="contenido">
   <section class="tarjeta">
     <h2>{{ editando() ? 'Editar producto' : 'Nuevo producto' }}</h2>
 
     @if (error(); as mensaje) {
-      <div class="alerta alerta-error">{{ mensaje }}</div>
+      <div class="alerta alerta-error" role="alert">
+        {{ mensaje }}
+      </div>
+    }
+    @if (exito(); as mensaje) {
+      <div class="alerta alerta-exito" role="status">{{ mensaje }}</div>
     }
 
     <form [formGroup]="form" (ngSubmit)="guardar()" class="formulario-producto">
@@ -37,13 +39,20 @@
       </div>
 
       <div class="campo">
-        <label for="stock">Stock</label>
-        <input id="stock" type="number" min="0" formControlName="stock" />
+        <label for="stockInicial">{{ editando() ? 'Stock actual' : 'Stock inicial' }}</label>
+        <input id="stockInicial" type="number" min="0" step="1" formControlName="stockInicial" aria-describedby="ayuda-stock" />
+        <span id="ayuda-stock" class="campo-ayuda">
+          {{ editando() ? 'El stock se ajusta desde Inventario (entradas y ventas).' : 'Unidades con las que el producto entra al catálogo.' }}
+        </span>
       </div>
 
       <div class="campo campo-ancho">
-        <label for="imagenUrl">URL de la imagen</label>
-        <input id="imagenUrl" type="text" formControlName="imagenUrl" placeholder="https://…" />
+        <span class="etiqueta-campo">Imagen (opcional)</span>
+        <app-selector-imagen
+          [url]="form.controls.imagenUrl.value"
+          (urlCambiada)="alCambiarImagen($event)"
+          (subiendo)="subiendoImagen.set($event)"
+        />
       </div>
 
       <div class="campo campo-ancho">
@@ -52,7 +61,7 @@
       </div>
 
       <div class="acciones-formulario">
-        <button type="submit" class="btn btn-primary" [disabled]="enviando()">
+        <button type="submit" class="btn btn-primary" [disabled]="enviando() || subiendoImagen()">
           {{ enviando() ? 'Guardando…' : editando() ? 'Guardar cambios' : 'Crear producto' }}
         </button>
         @if (editando()) {
@@ -65,22 +74,66 @@
   <section class="tarjeta">
     <h2>Catálogo</h2>
 
+    <!-- RF-02.5: búsqueda por nombre y filtros por categoría y estado. -->
+    <div class="filtros-panel" role="search">
+      <div class="campo filtro-busqueda">
+        <label for="buscar-producto">Buscar por nombre</label>
+        <input id="buscar-producto" type="search" [formControl]="buscador" placeholder="Ej.: crema, labial…" />
+      </div>
+      <div class="campo">
+        <label for="filtro-categoria">Categoría</label>
+        <select id="filtro-categoria" [value]="categoriaFiltro() ?? ''" (change)="filtrarPorCategoria($any($event.target).value)">
+          <option value="">Todas</option>
+          @for (categoria of categorias; track categoria) {
+            <option [value]="categoria">{{ etiquetasCategoria[categoria] }}</option>
+          }
+        </select>
+      </div>
+      <div class="campo">
+        <label for="filtro-estado">Estado</label>
+        <select id="filtro-estado" [value]="estadoFiltro()" (change)="filtrarPorEstado($any($event.target).value)">
+          <option value="TODOS">Todos</option>
+          <option value="ACTIVOS">Activos</option>
+          <option value="INACTIVOS">Inactivos</option>
+        </select>
+      </div>
+      @if (hayFiltros()) {
+        <button type="button" class="btn btn-secundario boton-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+      }
+    </div>
+
     @if (cargando()) {
       <p>Cargando productos…</p>
+    } @else if (articulosVisibles().length === 0) {
+      <p class="sin-resultados">
+        {{ hayFiltros() ? 'Ningún producto coincide con la búsqueda.' : 'Todavía no hay productos registrados.' }}
+      </p>
     } @else {
+      <p class="conteo" role="status">
+        {{ articulosVisibles().length }} {{ articulosVisibles().length === 1 ? 'producto' : 'productos' }}
+      </p>
       <table class="tabla-productos">
         <thead>
           <tr>
+            <th><span class="solo-lectores">Imagen</span></th>
             <th>Nombre</th>
             <th>Categoría</th>
             <th>Precio</th>
             <th>Stock</th>
+            <th>Estado</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          @for (articulo of articulos(); track articulo.id) {
-            <tr>
+          @for (articulo of articulosVisibles(); track articulo.id) {
+            <tr [class.fila-inactiva]="!articulo.activo">
+              <td class="celda-miniatura">
+                @if (articulo.imagenUrl | urlImagen; as src) {
+                  <img [src]="src" alt="" class="miniatura" loading="lazy" />
+                } @else {
+                  <span class="miniatura miniatura-vacia" title="Sin imagen">—</span>
+                }
+              </td>
               <td>{{ articulo.nombre }}</td>
               <td>{{ etiquetasCategoria[articulo.categoria] }}</td>
               <td>{{ articulo.precio }} COP</td>
@@ -90,9 +143,19 @@
                   <span class="insignia-agotado">Agotado</span>
                 }
               </td>
+              <td>
+                <span class="estado" [class.estado-activo]="articulo.activo" [class.estado-inactivo]="!articulo.activo">
+                  {{ articulo.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
               <td class="acciones-fila">
+                <button type="button" class="btn btn-secundario" (click)="verDetalle(articulo)">Ver</button>
                 <button type="button" class="btn btn-secundario" (click)="editar(articulo)">Editar</button>
-                <button type="button" class="btn btn-secundario btn-peligro" (click)="eliminar(articulo)">Eliminar</button>
+                <button type="button" class="btn btn-secundario" (click)="cambiarEstado(articulo)">
+                  {{ articulo.activo ? 'Desactivar' : 'Reactivar' }}
+                </button>
+                <button type="button" class="btn btn-secundario btn-peligro" [disabled]="verificandoEliminacion() === articulo.id"
+                        (click)="eliminar(articulo)">{{ verificandoEliminacion() === articulo.id ? 'Verificando…' : 'Eliminar' }}</button>
               </td>
             </tr>
           }
@@ -101,3 +164,36 @@
     }
   </section>
 </main>
+
+<!-- RF-02.8: confirmación antes de eliminar (solo la Administradora llega a esta pantalla). -->
+<app-dialogo-confirmacion
+  [abierto]="articuloPorEliminar() !== null"
+  titulo="Eliminar producto"
+  [mensaje]="'¿Seguro que quieres eliminar «' + (articuloPorEliminar()?.nombre ?? '') + '»? Esta acción no se puede deshacer.'"
+  detalle="Si solo quieres que deje de mostrarse en el catálogo, usa «Desactivar»: conserva el producto y su historial."
+  textoConfirmar="Sí, eliminar"
+  [peligroso]="true"
+  (confirmar)="confirmarEliminacion()"
+  (cancelar)="cancelarEliminacion()"
+/>
+
+<!-- RF-02.5: detalle completo del producto. -->
+<app-detalle-articulo
+  [articuloId]="detalleId()"
+  (cerrar)="detalleId.set(null)"
+  (editar)="editarDesdeDetalle($event)"
+/>
+
+<!-- RF-02.9: advertencia inmediata si el producto tiene pedidos activos. -->
+<app-dialogo-confirmacion
+  [abierto]="articuloConPedidos() !== null"
+  titulo="No se puede eliminar este producto"
+  [mensaje]="'«' + (articuloConPedidos()?.nombre ?? '') + '» tiene pedidos activos, así que no se puede eliminar.'"
+  [detalle]="articuloConPedidos()?.activo
+    ? 'Puedes desactivarlo: deja de mostrarse en el catálogo y se conserva el historial de sus pedidos.'
+    : 'El producto ya está desactivado, así que no se muestra en el catálogo.'"
+  [textoConfirmar]="articuloConPedidos()?.activo ? 'Desactivar producto' : 'Entendido'"
+  textoCancelar="Cerrar"
+  (confirmar)="responderAdvertenciaPedidos()"
+  (cancelar)="articuloConPedidos.set(null)"
+/>

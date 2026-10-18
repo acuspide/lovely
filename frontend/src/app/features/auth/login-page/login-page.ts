@@ -1,19 +1,28 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { extraerMensajeError } from '../../../core/http/mensaje-error';
+import { RUTA_INICIO_POR_ROL } from '../../../core/models/rol-usuario';
+import { VerContrasena } from '../../../shared/directives/ver-contrasena';
+import { PARAMETRO_RETORNO, rutaRetornoSegura } from '../../../core/auth/ruta-retorno';
 
 interface LoginForm {
   email: FormControl<string>;
   contrasena: FormControl<string>;
 }
 
+/** Mensaje informativo según cómo terminó la sesión anterior o qué acción se completó. */
+const MENSAJES_POR_MOTIVO: Record<string, string> = {
+  cerrada: 'Cerraste sesión correctamente.',
+  expirada: 'Tu sesión se cerró por inactividad. Inicia sesión de nuevo para continuar.',
+  restablecida: 'Tu contraseña se actualizó. Ya puedes iniciar sesión con la nueva.',
+};
+
 @Component({
   selector: 'app-login-page',
-  standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, VerContrasena],
   templateUrl: './login-page.html',
   styleUrl: './login-page.scss',
 })
@@ -23,6 +32,15 @@ export class LoginPage {
 
   protected readonly enviando = signal(false);
   protected readonly errorGeneral = signal<string | null>(null);
+  private readonly parametros = inject(ActivatedRoute).snapshot.queryParamMap;
+  protected readonly mensajeInformativo = signal<string | null>(
+    MENSAJES_POR_MOTIVO[this.parametros.get('sesion') ?? ''] ??
+      (this.parametros.get(PARAMETRO_RETORNO) === '/carrito/confirmar'
+        ? 'Inicia sesión o crea tu cuenta para confirmar tu pedido. Tu carrito se conserva.'
+        : null),
+  );
+  /** RF-04.5: ruta a la que volver después de iniciar sesión (solo rutas internas). */
+  protected readonly rutaRetorno = rutaRetornoSegura(this.parametros.get(PARAMETRO_RETORNO));
 
   protected readonly form = new FormGroup<LoginForm>({
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
@@ -37,22 +55,21 @@ export class LoginPage {
 
     this.enviando.set(true);
     this.errorGeneral.set(null);
+    this.mensajeInformativo.set(null);
 
     const { email, contrasena } = this.form.getRawValue();
 
     this.authService.login(email, contrasena).subscribe({
-      next: () => this.router.navigateByUrl('/dashboard'),
+      // RF-01.3: cada rol entra a su propia pantalla de inicio.
+      // Si venía de una pantalla protegida (p. ej. confirmar pedido), vuelve allá; el guard
+      // de esa ruta decide si su rol puede entrar.
+      next: (respuesta) =>
+        this.router.navigateByUrl(this.rutaRetorno ?? RUTA_INICIO_POR_ROL[respuesta.usuario.rol], { replaceUrl: true }),
       error: (error: unknown) => {
         this.enviando.set(false);
-        this.errorGeneral.set(this.extraerMensaje(error));
+        this.form.controls.contrasena.reset();
+        this.errorGeneral.set(extraerMensajeError(error, 'No se pudo iniciar sesión. Intenta de nuevo.'));
       },
     });
-  }
-
-  private extraerMensaje(error: unknown): string {
-    if (error instanceof HttpErrorResponse && typeof error.error?.detail === 'string') {
-      return error.error.detail;
-    }
-    return 'No se pudo iniciar sesión. Intenta de nuevo.';
   }
 }

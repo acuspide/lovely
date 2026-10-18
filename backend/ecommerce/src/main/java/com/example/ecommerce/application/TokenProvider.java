@@ -1,34 +1,30 @@
 package com.example.ecommerce.application;
 
+import com.example.ecommerce.domain.entity.Sesion;
 import com.example.ecommerce.domain.entity.Usuario;
 
 /**
- * Puerto de aplicación para emitir y validar el token de sesión del usuario.
- * El caso de uso que lo usa (IniciarSesionUseCase) no sabe si detrás hay JWT,
- * un token opaco u otro esquema: eso es una decisión de infraestructura
- * (JwtTokenProvider), lo que permite cambiarla sin tocar la capa de
- * aplicación (OCP/DIP).
+ * Puerto de aplicación para emitir y leer el token que representa una sesión.
+ * Los casos de uso no saben si detrás hay JWT, un token opaco u otro esquema:
+ * eso es una decisión de infraestructura (JwtTokenProvider), lo que permite
+ * cambiarla sin tocar la capa de aplicación (OCP/DIP).
+ *
+ * El token solo prueba que lo emitió este sistema; si la sesión sigue vigente
+ * (no se cerró ni venció por inactividad) lo decide ValidarSesionUseCase
+ * consultando la sesión guardada.
  */
 public interface TokenProvider {
 
-    /**
-     * Genera un token de sesión para el usuario autenticado.
-     */
-    String generarToken(Usuario usuario);
+    String generarToken(Usuario usuario, Sesion sesion);
 
     /**
-     * Minutos de validez del token, usados también para informar al cliente
-     * cuándo debe re-autenticarse (RF-01: sesión expira tras 30 min).
+     * Verifica la firma y la vigencia máxima del token y devuelve los datos
+     * que contiene. Lanza
+     * {@link com.example.ecommerce.domain.exception.TokenInvalidoException}
+     * si el token fue alterado o ya venció.
      */
-    long minutosDeExpiracion();
+    DatosToken leer(String token);
 
-    /**
-     * Valida la firma y vigencia del token y devuelve los datos que contiene.
-     * Lanza {@link com.example.ecommerce.domain.exception.TokenInvalidoException}
-     * si el token no es válido o ya expiró.
-     */
-    DatosToken validar(String token);
-
-    record DatosToken(long idUsuario, String email, String rol) {
+    record DatosToken(String idSesion, long idUsuario) {
     }
 }

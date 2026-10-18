@@ -1,0 +1,15 @@
+@if (inactividad.avisoVisible()) {
+  <div class="fondo-modal">
+    <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="titulo-aviso" aria-describedby="texto-aviso">
+      <h2 id="titulo-aviso">¿Sigues ahí?</h2>
+      <p id="texto-aviso">
+        Por seguridad, tu sesión se cerrará por inactividad en
+        <strong class="cuenta-regresiva" aria-live="polite">{{ tiempoRestante() }}</strong>.
+      </p>
+      <div class="acciones">
+        <button type="button" class="btn btn-secundario" (click)="inactividad.cerrarSesionAhora()">Cerrar sesión</button>
+        <button type="button" class="btn btn-primary" (click)="inactividad.seguirConectado()" autofocus>Seguir conectado</button>
+      </div>
+    </div>
+  </div>
+}

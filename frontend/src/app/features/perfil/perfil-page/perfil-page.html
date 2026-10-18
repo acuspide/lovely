@@ -1,0 +1,67 @@
+<app-barra-superior seccion="Mi perfil" />
+
+<main class="contenido">
+  <section class="tarjeta">
+    <h2>Mis datos</h2>
+    @if (perfil(); as datos) {
+      <dl class="datos">
+        <dt>Nombre</dt>
+        <dd>{{ datos.nombre }}</dd>
+        <dt>Correo</dt>
+        <dd>{{ datos.email }}</dd>
+        <dt>Teléfono</dt>
+        <dd>{{ datos.telefono ?? 'No registrado' }}</dd>
+        <dt>Rol</dt>
+        <dd>{{ etiquetasRol[datos.rol] }}</dd>
+      </dl>
+    } @else {
+      <p>Cargando…</p>
+    }
+  </section>
+
+  <section class="tarjeta">
+    <h2>Cambiar contraseña</h2>
+    <p class="explicacion">Por seguridad, se cerrará la sesión en tus otros dispositivos.</p>
+
+    @if (exito(); as mensaje) {
+      <div class="alerta alerta-exito" role="status">{{ mensaje }}</div>
+    }
+    @if (error(); as mensaje) {
+      <div class="alerta alerta-error" role="alert">{{ mensaje }}</div>
+    }
+
+    <form [formGroup]="form" #formulario="ngForm" (ngSubmit)="cambiarContrasena(formulario)" class="formulario" novalidate>
+      <div class="campo">
+        <label for="contrasenaActual">Contraseña actual</label>
+        <input id="contrasenaActual" type="password" formControlName="contrasenaActual" autocomplete="current-password" />
+        @if (form.controls.contrasenaActual.invalid && form.controls.contrasenaActual.touched) {
+          <span class="campo-error">Escribe tu contraseña actual.</span>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="nuevaContrasena">Nueva contraseña</label>
+        <input
+          id="nuevaContrasena"
+          type="password"
+          formControlName="nuevaContrasena"
+          autocomplete="new-password"
+          aria-describedby="requisitos-perfil"
+        />
+        <app-requisitos-contrasena [valor]="contrasenaEscrita()" idLista="requisitos-perfil" />
+      </div>
+
+      <div class="campo">
+        <label for="confirmarContrasena">Confirmar nueva contraseña</label>
+        <input id="confirmarContrasena" type="password" formControlName="confirmarContrasena" autocomplete="new-password" />
+        @if (form.errors?.['noCoinciden'] && form.controls.confirmarContrasena.touched) {
+          <span class="campo-error">Las contraseñas no coinciden.</span>
+        }
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Cambiar contraseña' }}
+      </button>
+    </form>
+  </section>
+</main>

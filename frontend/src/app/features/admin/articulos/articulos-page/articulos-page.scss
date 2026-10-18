@@ -1,9 +1,5 @@
 @use '../../../../shared/styles/layout';
 
-.barra-superior {
-  @include layout.barra-superior;
-}
-
 .contenido {
   @include layout.contenido-app;
   display: flex;
@@ -67,6 +63,7 @@
 
 .acciones-fila {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
@@ -87,4 +84,87 @@
   font-weight: 600;
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
+}
+
+/* RF-02.7: estado del producto (mismo estilo que el estado de las cuentas en Personal). */
+.estado {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.estado-activo {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.estado-inactivo {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+/* Un producto desactivado se ve atenuado en la tabla. */
+.fila-inactiva td:not(.acciones-fila) {
+  opacity: 0.6;
+}
+
+/* RF-02.4: miniatura de la foto en la tabla del panel. */
+.celda-miniatura {
+  width: 52px;
+}
+
+.miniatura {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--color-bg);
+}
+
+.miniatura-vacia {
+  color: var(--color-text-muted);
+  border: 1px dashed var(--color-border);
+}
+
+.etiqueta-campo {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* RF-02.5: barra de búsqueda y filtros del panel. */
+.filtros-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.filtro-busqueda {
+  flex: 1 1 240px;
+}
+
+.boton-limpiar {
+  align-self: flex-end;
+}
+
+.conteo,
+.sin-resultados {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
 }

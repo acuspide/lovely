@@ -1,0 +1,50 @@
+// Estilos compartidos por las pantallas de visitante (login, registro,
+// recuperar y restablecer contraseña), que usan la misma tarjeta centrada.
+@use 'layout';
+
+.pagina-auth {
+  @include layout.pagina-auth;
+}
+
+.tarjeta-auth {
+  @include layout.tarjeta-auth;
+}
+
+.marca-auth {
+  @include layout.marca-auth;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.enlace-secundario {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin: 0;
+
+  a {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.enlace-olvido {
+  align-self: flex-end;
+  margin-top: -0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

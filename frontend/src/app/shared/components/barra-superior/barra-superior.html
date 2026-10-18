@@ -1,0 +1,37 @@
+<header class="barra-superior">
+  <a class="marca" [routerLink]="rutaInicio()">
+    Lovely Girl
+    @if (seccion()) {
+      <span class="seccion">· {{ seccion() }}</span>
+    }
+  </a>
+
+  <nav class="navegacion" aria-label="Navegación principal">
+    @if (muestraCarrito()) {
+      <!-- RF-04.4: acceso al carrito con contador de unidades -->
+      <a routerLink="/carrito" routerLinkActive="activo" class="enlace enlace-carrito">
+        Carrito
+        @if (unidadesCarrito() > 0) {
+          <span class="contador-carrito" aria-label="unidades en el carrito">{{ unidadesCarrito() }}</span>
+        }
+      </a>
+    }
+    @if (usuario(); as datos) {
+      @for (enlace of enlaces(); track enlace.ruta) {
+        <a
+          [routerLink]="enlace.ruta"
+          routerLinkActive="activo"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="enlace"
+        >{{ enlace.etiqueta }}</a>
+      }
+      <a routerLink="/perfil" routerLinkActive="activo" class="enlace" [title]="etiquetasRol[datos.rol]">
+        Mi perfil
+      </a>
+      <button type="button" class="btn btn-secundario" (click)="cerrarSesion()">Cerrar sesión</button>
+    } @else {
+      <a routerLink="/login" class="btn btn-secundario">Iniciar sesión</a>
+      <a routerLink="/registro" class="btn btn-primary">Crear cuenta</a>
+    }
+  </nav>
+</header>
