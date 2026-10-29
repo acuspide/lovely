@@ -79,10 +79,9 @@ public class CancelarPedidoUseCase {
 
     /** RF-07.6: suma de nuevo las unidades de cada producto del pedido. */
     private void devolverStock(Pedido pedido) {
-        Map<Long, Integer> unidadesPorArticulo = new TreeMap<>();
-        for (DetallePedido detalle : pedido.getDetalles()) {
-            unidadesPorArticulo.merge(detalle.getArticuloId(), detalle.getCantidad(), Integer::sum);
-        }
+        // En orden de id (TreeMap), igual que al registrar, para bloquear sin cruces.
+        Map<Long, Integer> unidadesPorArticulo = new TreeMap<>(
+                CantidadesPorArticulo.sumar(pedido.getDetalles(), DetallePedido::getArticuloId, DetallePedido::getCantidad));
         unidadesPorArticulo.forEach((articuloId, unidades) -> {
             // Un producto con pedidos activos no se puede eliminar (RF-02.9), así
             // que debería existir; si no, no hay inventario al cual devolver.

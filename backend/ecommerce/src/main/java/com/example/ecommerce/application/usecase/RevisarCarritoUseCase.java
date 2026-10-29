@@ -5,7 +5,6 @@ import com.example.ecommerce.domain.repository.ArticuloRepository;
 import com.example.ecommerce.domain.valueobject.LineaCarritoRevisada;
 import com.example.ecommerce.domain.valueobject.RevisionCarrito;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,10 +37,8 @@ public class RevisarCarritoUseCase {
      *               producto viene repetido, se suman sus cantidades.
      */
     public RevisionCarrito ejecutar(List<LineaSolicitada> lineas) {
-        Map<Long, Integer> cantidadPorArticulo = new LinkedHashMap<>();
-        for (LineaSolicitada linea : lineas) {
-            cantidadPorArticulo.merge(linea.articuloId(), linea.cantidad(), Integer::sum);
-        }
+        Map<Long, Integer> cantidadPorArticulo =
+                CantidadesPorArticulo.sumar(lineas, LineaSolicitada::articuloId, LineaSolicitada::cantidad);
         if (cantidadPorArticulo.size() > MAXIMO_PRODUCTOS_DISTINTOS) {
             throw new CarritoDemasiadoGrandeException(MAXIMO_PRODUCTOS_DISTINTOS);
         }

@@ -167,4 +167,45 @@ public class ArticuloTest {
         assertThrows(com.example.ecommerce.domain.exception.CantidadInvalidaException.class,
                 () -> crearArticulo(1L, 5).descontarStock(0));
     }
+
+    // ---- H-01: verificarPuedeVender (regla de venta dentro de la entidad) ----
+
+    @Test
+    void verificarPuedeVenderAceptaUnaCantidadQueAlcanzaSinDescontarNada() {
+        // RF-05.4 / RF-06.2: solo verifica; el stock no cambia
+        Articulo articulo = crearArticulo(1L, 5);
+
+        assertDoesNotThrow(() -> articulo.verificarPuedeVender(5));
+        assertEquals(5, articulo.getStock());
+    }
+
+    @Test
+    void verificarPuedeVenderInformaCuantasQuedanSiNoAlcanza() {
+        // RF-06.4 / RN09: mismo tipo de excepción y mismo mensaje que antes del cambio
+        Articulo articulo = crearArticulo(1L, 2);
+
+        var error = assertThrows(com.example.ecommerce.domain.exception.StockInsuficienteException.class,
+                () -> articulo.verificarPuedeVender(3));
+
+        assertEquals("Solo quedan 2 unidades de «Labial Mate». Revisa tu carrito antes de confirmar.",
+                error.getMessage());
+        assertEquals(2, articulo.getStock());
+    }
+
+    @Test
+    void verificarPuedeVenderRechazaUnProductoAgotadoAntesQueLaCantidad() {
+        // RN01 / RN12: con stock 0 el aviso es "agotado", no "solo quedan 0"
+        assertThrows(com.example.ecommerce.domain.exception.ArticuloAgotadoException.class,
+                () -> crearArticulo(1L, 0).verificarPuedeVender(1));
+    }
+
+    @Test
+    void verificarPuedeVenderRechazaUnProductoInactivo() {
+        // RF-02.7: inactivo tiene prioridad sobre cualquier otra regla
+        Articulo articulo = crearArticulo(1L, 5);
+        articulo.desactivar();
+
+        assertThrows(com.example.ecommerce.domain.exception.ArticuloInactivoException.class,
+                () -> articulo.verificarPuedeVender(1));
+    }
 }

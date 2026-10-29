@@ -7,7 +7,6 @@ import com.example.ecommerce.domain.entity.Pedido;
 import com.example.ecommerce.domain.entity.Usuario;
 import com.example.ecommerce.domain.exception.ArticuloNoEncontradoException;
 import com.example.ecommerce.domain.exception.PedidoDuplicadoException;
-import com.example.ecommerce.domain.exception.StockInsuficienteException;
 import com.example.ecommerce.domain.exception.UsuarioNoEncontradoException;
 import com.example.ecommerce.domain.repository.ArticuloRepository;
 import com.example.ecommerce.domain.repository.PedidoRepository;
@@ -16,7 +15,6 @@ import com.example.ecommerce.domain.valueobject.DatosEntrega;
 import com.example.ecommerce.domain.valueobject.DetallePedido;
 
 import java.time.Clock;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -126,20 +124,14 @@ public class RegistrarPedidoUseCase {
     private Articulo bloquearYVerificar(long articuloId, int cantidad) {
         Articulo articulo = articuloRepository.obtenerParaActualizar(articuloId)
                 .orElseThrow(ArticuloNoEncontradoException::new);
-        articulo.verificarDisponibleParaVenta();
-        if (cantidad > articulo.getStock()) {
-            throw new StockInsuficienteException(articulo.getNombre().getValor(), articulo.getStock());
-        }
+        // H-01: la regla de venta la aplica la entidad, que es quien tiene el stock.
+        articulo.verificarPuedeVender(cantidad);
         return articulo;
     }
 
     /** Si un producto viene repetido, se suman sus cantidades (un detalle por producto). */
     private static Map<Long, Integer> cantidadesPorArticulo(List<Linea> lineas) {
-        Map<Long, Integer> cantidades = new LinkedHashMap<>();
-        for (Linea linea : lineas) {
-            cantidades.merge(linea.articuloId(), linea.cantidad(), Integer::sum);
-        }
-        return cantidades;
+        return CantidadesPorArticulo.sumar(lineas, Linea::articuloId, Linea::cantidad);
     }
 
     /** Lo que envía la clienta: quién es (sale de la sesión), qué compra, cómo lo recibe y la clave del intento. */

@@ -149,9 +149,7 @@ public class Articulo {
         if (!activo) {
             throw new ArticuloInactivoException();
         }
-        if (cantidad > stock) {
-            throw new StockInsuficienteException(nombre.getValor(), stock);
-        }
+        verificarAlcanza(cantidad);
         this.stock -= cantidad;
     }
 
@@ -182,6 +180,31 @@ public class Articulo {
         }
         if (estaAgotado()) {
             throw new ArticuloAgotadoException();
+        }
+    }
+
+    /**
+     * RF-05.4 / RF-06.4 / RN09: verifica, sin descontar nada, que el producto
+     * se pueda vender en la cantidad pedida. Lo usa el registro del pedido para
+     * comprobar TODOS los productos antes de descontar ninguno (RF-06.2).
+     * Refactorización H-01: antes esta regla estaba copiada en el caso de uso.
+     *
+     * @throws ArticuloInactivoException   si la Administradora lo desactivó (RF-02.7)
+     * @throws ArticuloAgotadoException    si no tiene unidades (RN01, RN12)
+     * @throws StockInsuficienteException  si hay unidades, pero no alcanzan (RF-06.4)
+     */
+    public void verificarPuedeVender(int cantidad) {
+        verificarDisponibleParaVenta();
+        verificarAlcanza(cantidad);
+    }
+
+    /**
+     * Única comparación de "¿alcanza el stock?" (RN09 / RF-06.4), compartida por
+     * {@link #verificarPuedeVender(int)} y {@link #descontarStock(int)}.
+     */
+    private void verificarAlcanza(int cantidad) {
+        if (cantidad > stock) {
+            throw new StockInsuficienteException(nombre.getValor(), stock);
         }
     }
 
