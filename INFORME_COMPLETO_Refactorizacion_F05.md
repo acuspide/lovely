@@ -1,16 +1,10 @@
 # Diagnóstico técnico y refactorización — F-05 Registro de pedidos
 
-> **Estado del documento: INFORME COMPLETO (Sesiones 1 y 2).**
-> Secciones 1–4: diagnóstico (versión parcial en el commit `40ad71e`).
-> Secciones 5–8: intervención, verificación, cierre y trazabilidad Git.
-
----
-
 ## 1. Contexto
 
 | Campo | Valor |
 |-------|-------|
-| Equipo | _[completar con los integrantes]_ |
+| Equipo |Alejandro Cubides, Yulbrynner Vanegas, Yeraldin Noguera |
 | Repositorio | https://github.com/acuspide/lovely |
 | Rama de trabajo | `refactor/f05-registro-pedidos` (creada desde `main`, commit `ffd8f0a`) |
 | Proyecto | Lovely Girl — sistema de gestión de ventas e inventario |
