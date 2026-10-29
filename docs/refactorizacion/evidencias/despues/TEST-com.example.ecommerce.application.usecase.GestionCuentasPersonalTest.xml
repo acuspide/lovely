@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" tests="17" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.069Z" hostname="LAPTOP-3N647AQH" time="0.109">
+  <properties/>
+  <testcase name="noPermiteEditarUnaCuentaConElCorreoDeOtra()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.003"/>
+  <testcase name="elListadoSoloMuestraAlPersonal()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.002"/>
+  <testcase name="reactivaUnaCuentaDesactivada()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.003"/>
+  <testcase name="[1] rol = ASESORA_VENTAS" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.009"/>
+  <testcase name="[2] rol = ENCARGADA_INVENTARIO" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.001"/>
+  <testcase name="[3] rol = ADMINISTRADORA" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.001"/>
+  <testcase name="noPermiteDesactivarUnaClienteDesdeElPanelDelPersonal()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.002"/>
+  <testcase name="permiteDesactivarAUnaAdministradoraSiQuedaOtraActiva()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.001"/>
+  <testcase name="laContrasenaInicialDebeCumplirLasMismasReglasDelRegistro()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.001"/>
+  <testcase name="noPermiteCrearUnaClienteDesdeElPanelDelPersonal()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.001"/>
+  <testcase name="editaLosDatosYElRolDeUnaCuentaDelPersonal()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.001"/>
+  <testcase name="noPermiteEditarLaCuentaDeUnaClienteDesdeElPanelDelPersonal()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.001"/>
+  <testcase name="noPermiteDesactivarALaUnicaAdministradoraActiva()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.002"/>
+  <testcase name="elCorreoDelPersonalTambienDebeSerUnico()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.002"/>
+  <testcase name="desactivaUnaCuentaDelPersonalSinEliminarlaYCierraSusSesiones()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.001"/>
+  <testcase name="fallaSiLaCuentaNoExiste()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.001"/>
+  <testcase name="noPermiteQuitarleElRolALaUnicaAdministradoraActiva()" classname="com.example.ecommerce.application.usecase.GestionCuentasPersonalTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.domain.entity.UsuarioTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.425Z" hostname="LAPTOP-3N647AQH" time="0.022">
+  <properties/>
+  <testcase name="noSePuedeCrearUnaCuentaSinNombre()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.001"/>
+  <testcase name="unIngresoExitosoDevuelveElContadorACero()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.0"/>
+  <testcase name="unaClienteRegistradaQuedaActivaConRolClienteYConstanciaDeHabeasData()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.001"/>
+  <testcase name="trasVencerElBloqueoElConteoDeIntentosEmpiezaDeNuevo()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.0"/>
+  <testcase name="toStringNoIncluyeElHashDeLaContrasena()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.003"/>
+  <testcase name="noSePuedeRegistrarUnaClienteSinAceptarHabeasData()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.001"/>
+  <testcase name="noSePuedeRegistrarUnaClienteSinTelefono()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.001"/>
+  <testcase name="conIdDevuelveUnaCopiaConElNuevoIdYElMismoEstado()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.001"/>
+  <testcase name="dosCuentasConElMismoIdSonIguales()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.001"/>
+  <testcase name="laEdicionDeDatosDePersonalNoAplicaAUnaCliente()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.001"/>
+  <testcase name="desactivarYActivarCambianElEstadoDeLaCuenta()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.0"/>
+  <testcase name="unaAdministradoraDesactivadaNoCuentaComoAdministradoraActiva()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.0"/>
+  <testcase name="elPersonalNoPuedeCrearseConRolCliente()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.0"/>
+  <testcase name="elQuintoIntentoFallidoBloqueaLaCuentaQuinceMinutos()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.0"/>
+  <testcase name="cambiarLaContrasenaQuitaElBloqueo()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.001"/>
+  <testcase name="cuatroIntentosFallidosNoBloqueanLaCuenta()" classname="com.example.ecommerce.domain.entity.UsuarioTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.domain.valueobject.DatosEntregaTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.494Z" hostname="LAPTOP-3N647AQH" time="0.007">
+  <properties/>
+  <testcase name="unDomicilioExigeDireccionYCiudad()" classname="com.example.ecommerce.domain.valueobject.DatosEntregaTest" time="0.001"/>
+  <testcase name="elRetiroEnTiendaNoNecesitaDireccionYLaIgnora()" classname="com.example.ecommerce.domain.valueobject.DatosEntregaTest" time="0.0"/>
+  <testcase name="unDomicilioCompletoSeAcepta()" classname="com.example.ecommerce.domain.valueobject.DatosEntregaTest" time="0.001"/>
+  <testcase name="siempreExigeTipoNombreYTelefonoValido()" classname="com.example.ecommerce.domain.valueobject.DatosEntregaTest" time="0.001"/>
+  <testcase name="rechazaTextosDemasiadoLargos()" classname="com.example.ecommerce.domain.valueobject.DatosEntregaTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

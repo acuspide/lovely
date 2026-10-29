@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.domain.entity.ArticuloTest" tests="20" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.356Z" hostname="LAPTOP-3N647AQH" time="0.027">
+  <properties/>
+  <testcase name="noDebeCrearArticuloSinCategoria()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <testcase name="siNoAlcanzaNoDescuentaNadaEInformaCuantasQuedan()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <testcase name="noDebeCrearArticuloSinDescripcion()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <testcase name="marcaEsOpcional()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <testcase name="unProductoConStockSePuedeVender()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.0"/>
+  <testcase name="unProductoInactivoNoSePuedeVenderAunqueTengaStock()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <testcase name="laImagenEsOpcionalYUnTextoVacioSeGuardaComoSinImagen()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.0"/>
+  <testcase name="unArticuloNuevoConStockPositivoNoEstaAgotado()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.0"/>
+  <testcase name="laCantidadADescontarDebeSerPositiva()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <testcase name="unProductoAgotadoNoSePuedeVender()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <testcase name="unArticuloConStockCeroEstaAgotado()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.0"/>
+  <testcase name="noDebeCrearArticuloConStockNegativo()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <testcase name="alVenderLaUltimaUnidadQuedaAgotado()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <testcase name="verificarPuedeVenderInformaCuantasQuedanSiNoAlcanza()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <testcase name="verificarPuedeVenderRechazaUnProductoInactivo()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <testcase name="verificarPuedeVenderRechazaUnProductoAgotadoAntesQueLaCantidad()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <testcase name="descontarStockRestaLasUnidadesVendidas()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <testcase name="dosArticulosConElMismoIdDebenSerIguales()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.0"/>
+  <testcase name="actualizarCambiaLosCamposYRevalidaInvariantes()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.0"/>
+  <testcase name="verificarPuedeVenderAceptaUnaCantidadQueAlcanzaSinDescontarNada()" classname="com.example.ecommerce.domain.entity.ArticuloTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

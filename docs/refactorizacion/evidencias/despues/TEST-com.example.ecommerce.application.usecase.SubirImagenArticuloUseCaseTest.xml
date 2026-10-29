@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.application.usecase.SubirImagenArticuloUseCaseTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.346Z" hostname="LAPTOP-3N647AQH" time="0.009">
+  <properties/>
+  <testcase name="siElAlmacenFallaSePropagaElErrorParaReintentarOContinuarSinImagen()" classname="com.example.ecommerce.application.usecase.SubirImagenArticuloUseCaseTest" time="0.005"/>
+  <testcase name="devuelveLaUrlQueEntregaElAlmacen()" classname="com.example.ecommerce.application.usecase.SubirImagenArticuloUseCaseTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

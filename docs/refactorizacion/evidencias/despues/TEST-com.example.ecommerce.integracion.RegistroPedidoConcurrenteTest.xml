@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.integracion.RegistroPedidoConcurrenteTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:48.800Z" hostname="LAPTOP-3N647AQH" time="1.299">
+  <properties/>
+  <testcase name="dosComprasSimultaneasDeLaUltimaUnidadSoloVendenUna()" classname="com.example.ecommerce.integracion.RegistroPedidoConcurrenteTest" time="1.257"/>
+  <system-out><![CDATA[2026-10-28T21:27:48.804-05:00  INFO 13524 --- [ecommerce] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.ecommerce.integracion.RegistroPedidoConcurrenteTest]: RegistroPedidoConcurrenteTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-28T21:27:48.831-05:00  INFO 13524 --- [ecommerce] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.ecommerce.EcommerceApplication for test class com.example.ecommerce.integracion.RegistroPedidoConcurrenteTest
+2026-10-28T21:27:48.831-05:00  INFO 13524 --- [ecommerce] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.ecommerce.integracion.RegistroPedidoConcurrenteTest]: RegistroPedidoConcurrenteTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-28T21:27:48.831-05:00  INFO 13524 --- [ecommerce] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.ecommerce.EcommerceApplication for test class com.example.ecommerce.integracion.RegistroPedidoConcurrenteTest
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

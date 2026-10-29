@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.infrastructure.pdf.GeneradorPdfFacturaOpenPdfTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.619Z" hostname="LAPTOP-3N647AQH" time="0.391">
+  <properties/>
+  <testcase name="generaUnPdfAnuladoConEnvioADomicilio()" classname="com.example.ecommerce.infrastructure.pdf.GeneradorPdfFacturaOpenPdfTest" time="0.376"/>
+  <testcase name="generaUnPdf()" classname="com.example.ecommerce.infrastructure.pdf.GeneradorPdfFacturaOpenPdfTest" time="0.013"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

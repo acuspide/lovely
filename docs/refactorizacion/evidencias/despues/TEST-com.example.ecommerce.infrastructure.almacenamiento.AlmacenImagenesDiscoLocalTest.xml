@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.infrastructure.almacenamiento.AlmacenImagenesDiscoLocalTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.577Z" hostname="LAPTOP-3N647AQH" time="0.042">
+  <properties/>
+  <testcase name="guardaElArchivoConNombreAleatorioYExtensionDeSuFormatoReal()" classname="com.example.ecommerce.infrastructure.almacenamiento.AlmacenImagenesDiscoLocalTest" time="0.02"/>
+  <testcase name="dosSubidasDeLaMismaImagenNoSePisan()" classname="com.example.ecommerce.infrastructure.almacenamiento.AlmacenImagenesDiscoLocalTest" time="0.013"/>
+  <testcase name="creaLaCarpetaSiNoExiste()" classname="com.example.ecommerce.infrastructure.almacenamiento.AlmacenImagenesDiscoLocalTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

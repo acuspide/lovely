@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.domain.valueobject.DesgloseIvaTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.501Z" hostname="LAPTOP-3N647AQH" time="0.007">
+  <properties/>
+  <testcase name="conRedondeoLaSumaSiempreCuadraConElTotal()" classname="com.example.ecommerce.domain.valueobject.DesgloseIvaTest" time="0.0"/>
+  <testcase name="elNumeroDeFacturaEsConsecutivoConFormatoFijo()" classname="com.example.ecommerce.domain.valueobject.DesgloseIvaTest" time="0.0"/>
+  <testcase name="unaTasaFueraDeRangoSeRechaza()" classname="com.example.ecommerce.domain.valueobject.DesgloseIvaTest" time="0.002"/>
+  <testcase name="separaElIvaDeUnTotalQueYaLoIncluye()" classname="com.example.ecommerce.domain.valueobject.DesgloseIvaTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.infrastructure.persistence.ArticuloMapperTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:48.010Z" hostname="LAPTOP-3N647AQH" time="0.004">
+  <properties/>
+  <testcase name="conservaElEstadoInactivo()" classname="com.example.ecommerce.infrastructure.persistence.ArticuloMapperTest" time="0.002"/>
+  <testcase name="elViajeDeIdaYVueltaConservaLosDatos()" classname="com.example.ecommerce.infrastructure.persistence.ArticuloMapperTest" time="0.0"/>
+  <testcase name="aEntidadDejaElIdEnNullCuandoElArticuloAunNoSePersiste()" classname="com.example.ecommerce.infrastructure.persistence.ArticuloMapperTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

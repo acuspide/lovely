@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.application.usecase.IniciarSesionUseCaseTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.201Z" hostname="LAPTOP-3N647AQH" time="0.013">
+  <properties/>
+  <testcase name="[1] rol = ASESORA_VENTAS" classname="com.example.ecommerce.application.usecase.IniciarSesionUseCaseTest" time="0.003"/>
+  <testcase name="[2] rol = ENCARGADA_INVENTARIO" classname="com.example.ecommerce.application.usecase.IniciarSesionUseCaseTest" time="0.001"/>
+  <testcase name="[3] rol = ADMINISTRADORA" classname="com.example.ecommerce.application.usecase.IniciarSesionUseCaseTest" time="0.002"/>
+  <testcase name="laClienteIniciaSesionYSeAbreUnaSesionQueVenceEnTreintaMinutos()" classname="com.example.ecommerce.application.usecase.IniciarSesionUseCaseTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

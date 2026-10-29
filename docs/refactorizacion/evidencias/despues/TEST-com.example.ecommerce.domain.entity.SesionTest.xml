@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.domain.entity.SesionTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.414Z" hostname="LAPTOP-3N647AQH" time="0.005">
+  <properties/>
+  <testcase name="laActividadRenuevaElVencimiento()" classname="com.example.ecommerce.domain.entity.SesionTest" time="0.0"/>
+  <testcase name="unaSesionCerradaDejaDeEstarVigenteDeInmediato()" classname="com.example.ecommerce.domain.entity.SesionTest" time="0.001"/>
+  <testcase name="unaSesionNuevaVenceTreintaMinutosDespuesDeIniciar()" classname="com.example.ecommerce.domain.entity.SesionTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

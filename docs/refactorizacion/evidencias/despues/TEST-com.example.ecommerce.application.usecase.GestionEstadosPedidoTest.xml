@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.application.usecase.GestionEstadosPedidoTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.179Z" hostname="LAPTOP-3N647AQH" time="0.022">
+  <properties/>
+  <testcase name="avanzarUnPedidoInexistenteResponde404()" classname="com.example.ecommerce.application.usecase.GestionEstadosPedidoTest" time="0.003"/>
+  <testcase name="siOtraPersonaYaCambioElEstadoElPasoSeRechaza()" classname="com.example.ecommerce.application.usecase.GestionEstadosPedidoTest" time="0.002"/>
+  <testcase name="laClientaSoloVeSusPedidos()" classname="com.example.ecommerce.application.usecase.GestionEstadosPedidoTest" time="0.001"/>
+  <testcase name="laListaFiltraPorEstadoYBuscaPorNumeroONombre()" classname="com.example.ecommerce.application.usecase.GestionEstadosPedidoTest" time="0.007"/>
+  <testcase name="alConfirmarSeEmiteLaFacturaUnaSolaVez()" classname="com.example.ecommerce.application.usecase.GestionEstadosPedidoTest" time="0.001"/>
+  <testcase name="unPedidoPendienteNoTieneFactura()" classname="com.example.ecommerce.application.usecase.GestionEstadosPedidoTest" time="0.002"/>
+  <testcase name="laAsesoraAvanzaElPedidoYQuedaEnElHistorialConSuNombre()" classname="com.example.ecommerce.application.usecase.GestionEstadosPedidoTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

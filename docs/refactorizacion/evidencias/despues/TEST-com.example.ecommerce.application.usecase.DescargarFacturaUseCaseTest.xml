@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.application.usecase.DescargarFacturaUseCaseTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.043Z" hostname="LAPTOP-3N647AQH" time="0.014">
+  <properties/>
+  <testcase name="laClientaDescargaLaFacturaDeSuPedidoConfirmado()" classname="com.example.ecommerce.application.usecase.DescargarFacturaUseCaseTest" time="0.004"/>
+  <testcase name="unPedidoPendienteTodaviaNoTieneFactura()" classname="com.example.ecommerce.application.usecase.DescargarFacturaUseCaseTest" time="0.001"/>
+  <testcase name="descargarVariasVecesNoCreaOtraFactura()" classname="com.example.ecommerce.application.usecase.DescargarFacturaUseCaseTest" time="0.001"/>
+  <testcase name="otraClientaNoPuedeDescargarla()" classname="com.example.ecommerce.application.usecase.DescargarFacturaUseCaseTest" time="0.002"/>
+  <testcase name="unPedidoCanceladoSinConfirmarNuncaTieneFactura()" classname="com.example.ecommerce.application.usecase.DescargarFacturaUseCaseTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

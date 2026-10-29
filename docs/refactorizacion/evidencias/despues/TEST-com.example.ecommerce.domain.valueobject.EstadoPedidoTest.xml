@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.domain.valueobject.EstadoPedidoTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.518Z" hostname="LAPTOP-3N647AQH" time="0.007">
+  <properties/>
+  <testcase name="unPedidoCanceladoNuncaDebeVolverAConfirmado()" classname="com.example.ecommerce.domain.valueobject.EstadoPedidoTest" time="0.001"/>
+  <testcase name="completadoYCanceladoSonFinales()" classname="com.example.ecommerce.domain.valueobject.EstadoPedidoTest" time="0.001"/>
+  <testcase name="unPedidoPendienteDebePoderConfirmarse()" classname="com.example.ecommerce.domain.valueobject.EstadoPedidoTest" time="0.001"/>
+  <testcase name="elFlujoNormalSigueElDiagramaDeEstados()" classname="com.example.ecommerce.domain.valueobject.EstadoPedidoTest" time="0.001"/>
+  <testcase name="ningunEstadoVuelveAtras()" classname="com.example.ecommerce.domain.valueobject.EstadoPedidoTest" time="0.0"/>
+  <testcase name="unPedidoCanceladoNoDebePoderTransicionarANingunEstado()" classname="com.example.ecommerce.domain.valueobject.EstadoPedidoTest" time="0.001"/>
+  <testcase name="soloPendienteYConfirmadoAdmitenCancelacion()" classname="com.example.ecommerce.domain.valueobject.EstadoPedidoTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -6,7 +6,7 @@
 |-------|-------|
 | Equipo |Alejandro Cubides, Yulbrynner Vanegas, Yeraldin Noguera |
 | Repositorio | https://github.com/acuspide/lovely |
-| Rama de trabajo | `refactor/f05-registro-pedidos` (creada desde `main`, commit `ffd8f0a`) |
+| Rama de trabajo | `refactor` (creada desde `main`, commit `758b9ae`; el código analizado es el de `ffd8f0a`, sin cambios hasta la refactorización) |
 | Proyecto | Lovely Girl — sistema de gestión de ventas e inventario |
 | Tecnología | Backend Java 21 + Spring Boot 4.1.1 (Gradle 9.7.1), Oracle + Flyway; frontend Angular |
 | Arquitectura declarada | Hexagonal (puertos y adaptadores): `domain` / `application` / `infrastructure` (README.md) |
@@ -146,7 +146,7 @@ PedidoRestController.registrar
 Las 2 que fallan (`EcommerceApplicationTests.contextLoads` y
 `RegistroPedidoConcurrenteTest`) son `@SpringBootTest` y necesitan Oracle levantado
 (`java.net.ConnectException`); el README ya lo advierte. No son fallas del código.
-Resultados XML guardados en `docs/refactorizacion/evidencias/antes/`.
+Este conteo se tomó en la sesión de diagnóstico; los reportes XML de esa ejecución no se conservaron en el repositorio.
 
 ---
 
@@ -207,7 +207,7 @@ Resultados XML guardados en `docs/refactorizacion/evidencias/antes/`.
 - **Verificación:** `RegistrarPedidoUseCaseTest` (13 pruebas: stock insuficiente, agotado,
   inactivo, todo o nada) y `ArticuloTest` deben seguir en verde sin modificarse; se agregan
   pruebas unitarias del nuevo método que fijan el tipo de excepción y el mensaje.
-- **Estado:** implementado y verificado (commit `7678ebf`).
+- **Estado:** implementado y verificado (commit `3d6f3e2`).
 - _Líneas citadas: versión `ffd8f0a`, antes de la intervención._
 
 ---
@@ -251,7 +251,7 @@ Resultados XML guardados en `docs/refactorizacion/evidencias/antes/`.
 - **Verificación:** `RegistrarPedidoUseCaseTest.unProductoRepetidoQuedaEnUnSoloDetalle`,
   `RevisarCarritoUseCaseTest` y `CancelarPedidoUseCaseTest` sin cambios y en verde; prueba
   unitaria nueva para la utilidad (suma y orden).
-- **Estado:** implementado y verificado (commit `7678ebf`).
+- **Estado:** implementado y verificado (commit `3d6f3e2`).
 
 ---
 
@@ -385,7 +385,7 @@ return articulo;
 **Después** — el caso de uso pide; la entidad decide:
 
 ```java
-// RegistrarPedidoUseCase.bloquearYVerificar (7678ebf, L124-129)
+// RegistrarPedidoUseCase.bloquearYVerificar (3d6f3e2, L124-130)
 Articulo articulo = articuloRepository.obtenerParaActualizar(articuloId)
         .orElseThrow(ArticuloNoEncontradoException::new);
 articulo.verificarPuedeVender(cantidad);
@@ -393,7 +393,7 @@ return articulo;
 ```
 
 ```java
-// Articulo (7678ebf)
+// Articulo (3d6f3e2)
 public void descontarStock(int cantidad) {          // L145
     if (cantidad <= 0) throw new CantidadInvalidaException();
     if (!activo) throw new ArticuloInactivoException();
@@ -401,12 +401,12 @@ public void descontarStock(int cantidad) {          // L145
     this.stock -= cantidad;
 }
 
-public void verificarPuedeVender(int cantidad) {    // L167 (nuevo)
+public void verificarPuedeVender(int cantidad) {    // L196 (nuevo)
     verificarDisponibleParaVenta();
     verificarAlcanza(cantidad);
 }
 
-private void verificarAlcanza(int cantidad) {       // L173 (nuevo): única comparación
+private void verificarAlcanza(int cantidad) {       // L205 (nuevo): única comparación
     if (cantidad > stock) throw new StockInsuficienteException(nombre.getValor(), stock);
 }
 ```
@@ -435,7 +435,7 @@ que devuelve un `LinkedHashMap` (orden de primera aparición, igual que antes).
 
 | Caso de uso | Antes | Después |
 |-------------|-------|---------|
-| `RegistrarPedidoUseCase.cantidadesPorArticulo` | bucle con `LinkedHashMap.merge` | `CantidadesPorArticulo.sumar(lineas, Linea::articuloId, Linea::cantidad)` (L133) |
+| `RegistrarPedidoUseCase.cantidadesPorArticulo` | bucle con `LinkedHashMap.merge` | `CantidadesPorArticulo.sumar(lineas, Linea::articuloId, Linea::cantidad)` (L134) |
 | `RevisarCarritoUseCase.ejecutar` | bucle con `LinkedHashMap.merge` | `CantidadesPorArticulo.sumar(...)` (L40–41) |
 | `CancelarPedidoUseCase.devolverStock` | bucle con `TreeMap.merge` | `new TreeMap<>(CantidadesPorArticulo.sumar(...))` (L83–84): conserva el orden por id para bloquear |
 
@@ -443,7 +443,7 @@ La clase es `final` y de visibilidad de paquete: no amplía la API pública de l
 aplicación. Se descartó ponerla en el dominio porque opera sobre tipos de solicitud de la
 capa de aplicación (`Linea`, `LineaSolicitada`).
 
-### 5.3 Archivos afectados (commit `7678ebf`)
+### 5.3 Archivos afectados (commit `3d6f3e2`)
 
 | Archivo | Cambio |
 |---------|--------|
@@ -455,7 +455,7 @@ capa de aplicación (`Linea`, `LineaSolicitada`).
 | `test/.../domain/entity/ArticuloTest.java` | +4 pruebas de `verificarPuedeVender` |
 | `test/.../application/usecase/CantidadesPorArticuloTest.java` | **nuevo**, 3 pruebas |
 
-Total: 7 archivos, +138 / −21 líneas. **Ninguna prueba existente se modificó.**
+Total: 7 archivos, +152 / −23 líneas. **Ninguna prueba existente se modificó.**
 
 ---
 
@@ -463,25 +463,30 @@ Total: 7 archivos, +138 / −21 líneas. **Ninguna prueba existente se modificó
 
 ### 6.1 Pruebas ejecutadas
 
-Comando: `cd backend/ecommerce && ./gradlew test` (JDK 21, Gradle 9.7.1), en el mismo
-entorno antes y después.
+Comando: `cd backend/ecommerce && ./gradlew test` (JDK 21, Gradle 9.7.1). La columna
+"Antes" corresponde a la línea base de la sesión de diagnóstico (sin Oracle). La columna
+"Después" se ejecutó en el computador de una integrante del equipo, en la rama `refactor`, con Oracle
+levantado (`docker compose up -d`), el 28/10/2026.
 
-| Suite | Antes (`ffd8f0a`) | Después (`7678ebf`) |
+| Suite | Antes (`ffd8f0a`) | Después (`3d6f3e2`) |
 |-------|:-----------------:|:-------------------:|
 | `RegistrarPedidoUseCaseTest` | 13 / 13 ✅ | 13 / 13 ✅ |
 | `ArticuloTest` | 16 / 16 ✅ | 20 / 20 ✅ (+4) |
 | `RevisarCarritoUseCaseTest` | 8 / 8 ✅ | 8 / 8 ✅ |
 | `CancelarPedidoUseCaseTest` | 6 / 6 ✅ | 6 / 6 ✅ |
 | `CantidadesPorArticuloTest` | — | 3 / 3 ✅ (nueva) |
-| `EcommerceApplicationTests` | ❌ sin Oracle | ❌ sin Oracle |
-| `RegistroPedidoConcurrenteTest` | ❌ sin Oracle | ❌ sin Oracle |
-| **Total** | **280 — 278 pasan, 2 fallan** | **287 — 285 pasan, 2 fallan** |
+| `EcommerceApplicationTests` | ❌ sin Oracle | 1 / 1 ✅ (con Oracle) |
+| `RegistroPedidoConcurrenteTest` | ❌ sin Oracle | 1 / 1 ✅ (con Oracle) |
+| **Total** | **280 — 278 pasan, 2 fallan** | **287 — 287 pasan, 0 fallan** |
 
-Las 2 fallas son idénticas antes y después (`FlywaySqlUnableToConnectToDbException` →
-`java.net.ConnectException`): se deben al entorno, no al cambio.
+La diferencia de 7 pruebas (280 → 287) corresponde exactamente a las pruebas nuevas
+(4 en `ArticuloTest` y 3 en `CantidadesPorArticuloTest`). Las 2 fallas de la línea base se
+debían a que Oracle no estaba levantado (`FlywaySqlUnableToConnectToDbException` →
+`java.net.ConnectException`); con Oracle encendido, ambas pruebas de integración pasan,
+incluida la de compras simultáneas (RF-06.5).
 
-Evidencia: reportes JUnit XML en `docs/refactorizacion/evidencias/antes/` y
-`docs/refactorizacion/evidencias/despues/`.
+Evidencia: reportes JUnit XML de la ejecución posterior en
+`docs/refactorizacion/evidencias/despues/` (46 archivos, uno por clase de prueba).
 
 ### 6.2 Pruebas que protegen el comportamiento refactorizado
 
@@ -511,9 +516,9 @@ pruebas lo detectan. El código se restauró antes del commit.
 
 ### 6.4 Limitaciones
 
-- **Sin Oracle:** `RegistroPedidoConcurrenteTest` (RF-06.5, dos compras simultáneas) no se
-  ejecutó. El cambio no toca la persistencia, los bloqueos ni el orden de bloqueo, pero debe
-  correrse con `docker compose up -d` antes de fusionar a `main`.
+- **Concurrencia:** `RegistroPedidoConcurrenteTest` (RF-06.5, dos compras simultáneas) se
+  ejecutó con Oracle y pasó. La línea base de esa prueba no se pudo ejecutar en la sesión de
+  diagnóstico, por lo que la comparación antes/después de esa suite no está disponible.
 - **Frontend:** no se modificó y no se ejecutaron sus pruebas.
 - No hay prueba de controlador (`@WebMvcTest`) para `POST /api/pedidos`; la conservación del
   contrato HTTP se argumenta porque el controlador y `GlobalExceptionHandler` no cambiaron y
@@ -564,13 +569,14 @@ pruebas lo detectan. El código se restauró antes del commit.
 
 | Paso | Commit | Mensaje |
 |------|--------|---------|
-| Base | `ffd8f0a` | Merge pull request #3 (estado analizado) |
-| Commit 1 | `40ad71e` | `docs: registrar diagnostico tecnico` |
-| Commit 2 | `7678ebf` | `refactor: separar responsabilidades de registro de pedidos` |
-| Commit 3 | _(este documento)_ | `docs: documentar verificacion de refactorizacion` |
+| Base del análisis | `ffd8f0a` | Merge pull request #3 (código analizado) |
+| Informe de refactorización | `c6a6ed8` | `refactorización` (rama `main`) |
+| Diagnóstico | `7526b75` | `diagnostico` (rama `main`) |
+| Datos del equipo | `758b9ae` | `se añade el nombre del equipo` (rama `main`; origen de la rama `refactor`) |
+| Refactorización | `3d6f3e2` | `refactor: separar responsabilidades de registro de pedidos` |
+| Verificación | _(este documento)_ | `docs: documentar verificacion de refactorizacion` |
 
-Rama: `refactor/f05-registro-pedidos`.
+Rama: `refactor`.
 Enlaces (una vez publicada la rama):
-`https://github.com/acuspide/lovely/commit/40ad71e`,
-`https://github.com/acuspide/lovely/commit/7678ebf`,
-`https://github.com/acuspide/lovely/tree/refactor/f05-registro-pedidos/docs/refactorizacion`.
+`https://github.com/acuspide/lovely/commit/3d6f3e2`,
+`https://github.com/acuspide/lovely/tree/refactor/docs/refactorizacion`.

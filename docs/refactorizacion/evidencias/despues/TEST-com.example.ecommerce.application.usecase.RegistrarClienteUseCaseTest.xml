@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.application.usecase.RegistrarClienteUseCaseTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.256Z" hostname="LAPTOP-3N647AQH" time="0.014">
+  <properties/>
+  <testcase name="noPermiteRegistrarseConUnaContrasenaDebil()" classname="com.example.ecommerce.application.usecase.RegistrarClienteUseCaseTest" time="0.002"/>
+  <testcase name="noPermiteRegistrarUnCorreoRepetido()" classname="com.example.ecommerce.application.usecase.RegistrarClienteUseCaseTest" time="0.002"/>
+  <testcase name="noPermiteRegistrarseConUnTelefonoInvalido()" classname="com.example.ecommerce.application.usecase.RegistrarClienteUseCaseTest" time="0.001"/>
+  <testcase name="registroExitosoCreaUnaClienteActivaConRolCliente()" classname="com.example.ecommerce.application.usecase.RegistrarClienteUseCaseTest" time="0.001"/>
+  <testcase name="noPermiteRegistrarseSinAceptarHabeasData()" classname="com.example.ecommerce.application.usecase.RegistrarClienteUseCaseTest" time="0.001"/>
+  <testcase name="laContrasenaSeGuardaCifradaYNoEnTextoPlano()" classname="com.example.ecommerce.application.usecase.RegistrarClienteUseCaseTest" time="0.002"/>
+  <testcase name="toStringDeLaSolicitudNoIncluyeLaContrasena()" classname="com.example.ecommerce.application.usecase.RegistrarClienteUseCaseTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

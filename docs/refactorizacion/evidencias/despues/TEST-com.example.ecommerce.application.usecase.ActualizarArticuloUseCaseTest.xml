@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.application.usecase.ActualizarArticuloUseCaseTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:46.904Z" hostname="LAPTOP-3N647AQH" time="0.027">
+  <properties/>
+  <testcase name="debeFallarSiElArticuloNoExiste()" classname="com.example.ecommerce.application.usecase.ActualizarArticuloUseCaseTest" time="0.006"/>
+  <testcase name="debePermitirCorregirMayusculasDelPropioNombre()" classname="com.example.ecommerce.application.usecase.ActualizarArticuloUseCaseTest" time="0.012"/>
+  <testcase name="debePermitirGuardarSinCambiarElPropioNombre()" classname="com.example.ecommerce.application.usecase.ActualizarArticuloUseCaseTest" time="0.0"/>
+  <testcase name="noDebePermitirRenombrarAUnNombreYaUsadoPorOtroArticulo()" classname="com.example.ecommerce.application.usecase.ActualizarArticuloUseCaseTest" time="0.003"/>
+  <testcase name="debeActualizarUnArticuloExistente()" classname="com.example.ecommerce.application.usecase.ActualizarArticuloUseCaseTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

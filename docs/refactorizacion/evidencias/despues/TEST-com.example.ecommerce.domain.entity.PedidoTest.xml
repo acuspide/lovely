@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.domain.entity.PedidoTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.391Z" hostname="LAPTOP-3N647AQH" time="0.022">
+  <properties/>
+  <testcase name="enProcesoYaNoSePuedeCancelar()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.002"/>
+  <testcase name="recorreTodoElFlujoNormalYCadaPasoQuedaEnElHistorial()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.001"/>
+  <testcase name="unPedidoCanceladoNuncaDebeVolverAConfirmarse()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.0"/>
+  <testcase name="unPedidoNuevoNaceEnEstadoPendiente()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.0"/>
+  <testcase name="unPedidoSinProductosNoSePuedeCrear()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.001"/>
+  <testcase name="noSePuedeSaltarUnEstado()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.001"/>
+  <testcase name="exigeUnaClaveDeIntentoValida()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.0"/>
+  <testcase name="laCancelacionGuardaElMotivoYQuienCancelo()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.001"/>
+  <testcase name="laClientaNoPuedeCancelarUnPedidoConfirmado()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.001"/>
+  <testcase name="elNumeroDePedidoSaleDelConsecutivo()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.001"/>
+  <testcase name="elTotalDelPedidoDebeSerLaSumaDeLosSubtotalesDeSusDetalles()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.002"/>
+  <testcase name="unPedidoEntregadoNoVuelveAtras()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.001"/>
+  <testcase name="laCancelacionExigeMotivo()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.001"/>
+  <testcase name="elRegistroEsLaPrimeraEntradaDelHistorial()" classname="com.example.ecommerce.domain.entity.PedidoTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

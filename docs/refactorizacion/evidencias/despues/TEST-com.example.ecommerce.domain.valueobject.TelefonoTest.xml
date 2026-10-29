@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.domain.valueobject.TelefonoTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.554Z" hostname="LAPTOP-3N647AQH" time="0.02">
+  <properties/>
+  <testcase name="[1] escrito = null" classname="com.example.ecommerce.domain.valueobject.TelefonoTest" time="0.001"/>
+  <testcase name="[2] escrito = &quot;&quot;" classname="com.example.ecommerce.domain.valueobject.TelefonoTest" time="0.001"/>
+  <testcase name="[3] escrito = &quot;300123456&quot;" classname="com.example.ecommerce.domain.valueobject.TelefonoTest" time="0.0"/>
+  <testcase name="[4] escrito = &quot;30012345678&quot;" classname="com.example.ecommerce.domain.valueobject.TelefonoTest" time="0.001"/>
+  <testcase name="[5] escrito = &quot;1234567890&quot;" classname="com.example.ecommerce.domain.valueobject.TelefonoTest" time="0.001"/>
+  <testcase name="[6] escrito = &quot;300abc4567&quot;" classname="com.example.ecommerce.domain.valueobject.TelefonoTest" time="0.001"/>
+  <testcase name="[1] escrito = &quot;3001234567&quot;" classname="com.example.ecommerce.domain.valueobject.TelefonoTest" time="0.0"/>
+  <testcase name="[2] escrito = &quot;300 123 4567&quot;" classname="com.example.ecommerce.domain.valueobject.TelefonoTest" time="0.0"/>
+  <testcase name="[3] escrito = &quot;300-123-4567&quot;" classname="com.example.ecommerce.domain.valueobject.TelefonoTest" time="0.0"/>
+  <testcase name="[4] escrito = &quot;+57 300 123 4567&quot;" classname="com.example.ecommerce.domain.valueobject.TelefonoTest" time="0.001"/>
+  <testcase name="[5] escrito = &quot;573001234567&quot;" classname="com.example.ecommerce.domain.valueobject.TelefonoTest" time="0.001"/>
+  <testcase name="[1] escrito = &quot;6067451234&quot;" classname="com.example.ecommerce.domain.valueobject.TelefonoTest" time="0.001"/>
+  <testcase name="[2] escrito = &quot;(606) 745 1234&quot;" classname="com.example.ecommerce.domain.valueobject.TelefonoTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

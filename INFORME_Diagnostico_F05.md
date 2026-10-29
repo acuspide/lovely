@@ -142,7 +142,7 @@ PedidoRestController.registrar
 Las 2 que fallan (`EcommerceApplicationTests.contextLoads` y
 `RegistroPedidoConcurrenteTest`) son `@SpringBootTest` y necesitan Oracle levantado
 (`java.net.ConnectException`); el README ya lo advierte. No son fallas del código.
-Resultados XML guardados en `docs/refactorizacion/evidencias/antes/`.
+Los reportes XML de esta ejecución no se conservaron en el repositorio.
 
 ---
 

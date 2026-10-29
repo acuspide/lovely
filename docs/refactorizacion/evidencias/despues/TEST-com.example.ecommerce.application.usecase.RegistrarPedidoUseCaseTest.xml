@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-10-29T02:27:47.271Z" hostname="LAPTOP-3N647AQH" time="0.034">
+  <properties/>
+  <testcase name="noRegistraProductosAgotadosNiDesactivados()" classname="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" time="0.004"/>
+  <testcase name="registraElPedidoPendienteConNumeroYPreciosDelMomento()" classname="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" time="0.004"/>
+  <testcase name="conPedidosRegistradosElProductoYaNoSePuedeEliminar()" classname="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" time="0.002"/>
+  <testcase name="unProductoRepetidoQuedaEnUnSoloDetalle()" classname="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" time="0.001"/>
+  <testcase name="siUnProductoNoAlcanzaNoSeDescuentaNingunoNiSeRegistraElPedido()" classname="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" time="0.002"/>
+  <testcase name="alRegistrarElPedidoSeDescuentaElStock()" classname="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" time="0.001"/>
+  <testcase name="unReintentoNoDescuentaElStockDosVeces()" classname="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" time="0.001"/>
+  <testcase name="enviaElCorreoDeConfirmacion()" classname="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" time="0.001"/>
+  <testcase name="despuesDeAgotarseUnaSegundaCompraRecibeElAviso()" classname="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" time="0.002"/>
+  <testcase name="unReintentoConLaMismaClaveDevuelveElMismoPedidoSinDuplicar()" classname="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" time="0.001"/>
+  <testcase name="alVenderLasUltimasUnidadesElProductoQuedaAgotadoEnElCatalogo()" classname="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" time="0.001"/>
+  <testcase name="losNumerosDePedidoSonConsecutivos()" classname="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" time="0.002"/>
+  <testcase name="noRegistraNadaSiUnProductoNoAlcanza()" classname="com.example.ecommerce.application.usecase.RegistrarPedidoUseCaseTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
