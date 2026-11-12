@@ -63,20 +63,6 @@ docker-compose.yml   Oracle y Mailpit (correo de pruebas) para desarrollo local
    ```
    La app queda disponible en `http://localhost:4200`.
 
-## F-09: Confirmación del pago
-
-La versión 1.0 no procesa pagos en línea. La clienta paga por transferencia (banco, Nequi o
-Daviplata) o en efectivo, y el personal confirma en el sistema que el dinero llegó.
-
-| Requisito | Cómo se cumple |
-|-----------|----------------|
-| RF-09.1 Quién confirma | La Asesora de ventas o la Administradora, en el detalle del pedido (`/pedidos/:id`, botón "Confirmar pago"). Endpoint `POST /api/pedidos/gestion/{id}/pago`. La clienta no puede (403). |
-| RF-09.2 Datos del pago | Medio (Transferencia o Efectivo), referencia (obligatoria en transferencias, 4 a 60 caracteres), monto recibido, fecha de recepción, quién confirmó y cuándo. Se guardan en el pedido (migración V10). |
-| RF-09.3 Monto | Debe ser igual al total del pedido; si no, se rechaza y el pedido sigue Pendiente. |
-| RF-09.4 Fecha | No puede ser futura ni anterior al día del pedido (hora de Colombia). |
-| RF-09.5 Confirmado y factura | En la misma transacción el pedido pasa a Confirmado y se emite la factura. |
-| RF-09.6 Sin pago no hay confirmación | Un cambio de estado directo de Pendiente a Confirmado se rechaza (409) y un pedido Pendiente no tiene factura. Si el pago no llega, la clienta o la Administradora cancelan el pedido con motivo y el stock vuelve. |
-
 ## Pruebas
 
 ```bash
@@ -130,3 +116,17 @@ npx ng test --watch=false
 
 > La factura en PDF es un comprobante de venta generado por el sistema; no reemplaza la factura
 > electrónica de venta ante la DIAN (RNF-11).
+
+## F-09: Confirmación del pago
+
+La versión 1.0 no procesa pagos en línea. La clienta paga por transferencia (banco, Nequi o
+Daviplata) o en efectivo, y el personal confirma en el sistema que el dinero llegó.
+
+| Requisito | Cómo se cumple |
+|-----------|----------------|
+| RF-09.1 Quién confirma | La Asesora de ventas o la Administradora, en el detalle del pedido (`/pedidos/:id`, botón "Confirmar pago"). Endpoint `POST /api/pedidos/gestion/{id}/pago`. La clienta no puede (403). |
+| RF-09.2 Datos del pago | Medio (Transferencia o Efectivo), referencia (obligatoria en transferencias, 4 a 60 caracteres), monto recibido, fecha de recepción, quién confirmó y cuándo. Se guardan en el pedido (migración V10). |
+| RF-09.3 Monto | Debe ser igual al total del pedido; si no, se rechaza y el pedido sigue Pendiente. |
+| RF-09.4 Fecha | No puede ser futura ni anterior al día del pedido (hora de Colombia). |
+| RF-09.5 Confirmado y factura | En la misma transacción el pedido pasa a Confirmado y se emite la factura. |
+| RF-09.6 Sin pago no hay confirmación | Un cambio de estado directo de Pendiente a Confirmado se rechaza (409) y un pedido Pendiente no tiene factura. Si el pago no llega, la clienta o la Administradora cancelan el pedido con motivo y el stock vuelve. |
