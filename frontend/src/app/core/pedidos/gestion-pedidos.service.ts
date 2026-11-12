@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import { API_BASE_URL } from '../config/api.config';
 import { conErrorLegible } from '../http/descarga-archivo';
-import { EstadoPedido, PedidoGestion, ResumenPedidoGestion } from './pedido.model';
+import { DatosConfirmacionPago, EstadoPedido, PedidoGestion, ResumenPedidoGestion } from './pedido.model';
 
 /**
  * F-07: gestión de pedidos del personal (Administradora y Asesora de ventas).
@@ -30,6 +30,11 @@ export class GestionPedidosService {
   /** RF-07.2: detalle con historial (RF-07.7). */
   obtener(id: number): Observable<PedidoGestion> {
     return this.http.get<PedidoGestion>(`${this.base}/${id}`);
+  }
+
+  /** F-09 / RN11: confirma el pago recibido; el pedido pasa a Confirmado y se emite la factura. */
+  confirmarPago(id: number, datos: DatosConfirmacionPago): Observable<PedidoGestion> {
+    return this.http.post<PedidoGestion>(`${this.base}/${id}/pago`, datos);
   }
 
   /** RF-07.3: pasa el pedido al estado indicado, que debe ser el siguiente del diagrama. */

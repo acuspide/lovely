@@ -4,6 +4,7 @@ import com.example.ecommerce.application.GestorTransacciones;
 import com.example.ecommerce.application.NotificadorPedidos;
 import com.example.ecommerce.application.usecase.AvanzarEstadoPedidoUseCase;
 import com.example.ecommerce.application.usecase.CancelarPedidoUseCase;
+import com.example.ecommerce.application.usecase.ConfirmarPagoUseCase;
 import com.example.ecommerce.application.usecase.EmisorFacturas;
 import com.example.ecommerce.application.usecase.ListarPedidosDeClienteUseCase;
 import com.example.ecommerce.application.usecase.ListarPedidosUseCase;
@@ -71,6 +72,13 @@ public class PedidosConfig {
                                                                  EmisorFacturas emisorFacturas,
                                                                  GestorTransacciones transacciones, Clock reloj) {
         return new AvanzarEstadoPedidoUseCase(pedidoRepository, emisorFacturas, transacciones, reloj);
+    }
+
+    @Bean
+    public ConfirmarPagoUseCase confirmarPagoUseCase(PedidoRepository pedidoRepository,
+                                                     EmisorFacturas emisorFacturas,
+                                                     GestorTransacciones transacciones, Clock reloj) {
+        return new ConfirmarPagoUseCase(pedidoRepository, emisorFacturas, transacciones, reloj);
     }
 
     @Bean

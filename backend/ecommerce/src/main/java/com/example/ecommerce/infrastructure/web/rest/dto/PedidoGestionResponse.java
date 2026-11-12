@@ -5,11 +5,13 @@ import com.example.ecommerce.domain.entity.Factura;
 import com.example.ecommerce.domain.entity.Pedido;
 import com.example.ecommerce.domain.valueobject.CambioEstadoPedido;
 import com.example.ecommerce.domain.valueobject.EstadoPedido;
+import com.example.ecommerce.domain.valueobject.PagoConfirmado;
 import com.example.ecommerce.infrastructure.web.rest.dto.PedidoResponse.EntregaResponse;
 import com.example.ecommerce.infrastructure.web.rest.dto.PedidoResponse.LineaResponse;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +23,7 @@ import java.util.Optional;
  * @param admiteCancelacion RF-07.5: el estado permite cancelar (la web solo lo ofrece a la Administradora)
  * @param factura           F-08: datos de la factura, o null si aún no tiene
  * @param facturaDisponible F-08: se puede descargar (la web solo lo ofrece a la Administradora)
+ * @param pago              F-09: pago confirmado, o null si el pedido aún no lo tiene
  */
 public record PedidoGestionResponse(
         long id,
@@ -37,7 +40,8 @@ public record PedidoGestionResponse(
         String motivoCancelacion,
         List<CambioResponse> historial,
         FacturaResponse factura,
-        boolean facturaDisponible) {
+        boolean facturaDisponible,
+        PagoResponse pago) {
 
     public static PedidoGestionResponse desde(VistaPedido vista, Optional<Factura> factura) {
         Pedido pedido = vista.pedido();
@@ -57,7 +61,18 @@ public record PedidoGestionResponse(
                 pedido.getMotivoCancelacion().orElse(null),
                 pedido.getHistorial().stream().map(cambio -> CambioResponse.desde(cambio, vista)).toList(),
                 factura.map(FacturaResponse::desde).orElse(null),
-                PedidoResponse.facturaDisponible(pedido, factura));
+                PedidoResponse.facturaDisponible(pedido, factura),
+                pedido.getPago().map(p -> PagoResponse.desde(p, vista)).orElse(null));
+    }
+
+    /** F-09 (RF-09.2): datos de la confirmación del pago, con el nombre de quien confirmó. */
+    public record PagoResponse(String medio, String referencia, BigDecimal monto, LocalDate fechaRecepcion,
+                               String confirmadoPor, Instant confirmadoEn) {
+
+        static PagoResponse desde(PagoConfirmado pago, VistaPedido vista) {
+            return new PagoResponse(pago.medio().name(), pago.referencia(), pago.monto(), pago.fechaRecepcion(),
+                    vista.nombreDe(pago.confirmadoPor()), pago.confirmadoEn());
+        }
     }
 
     /** F-08: número, fecha de emisión y si está anulada (RF-08.6). */

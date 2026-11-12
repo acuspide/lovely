@@ -3,6 +3,8 @@ package com.example.ecommerce.domain.entity;
 import com.example.ecommerce.domain.exception.CancelacionNoPermitidaException;
 import com.example.ecommerce.domain.exception.ClaveIdempotenciaInvalidaException;
 import com.example.ecommerce.domain.exception.MotivoCancelacionInvalidoException;
+import com.example.ecommerce.domain.exception.PagoInvalidoException;
+import com.example.ecommerce.domain.exception.PagoNoConfirmadoException;
 import com.example.ecommerce.domain.exception.PedidoSinDetallesException;
 import com.example.ecommerce.domain.exception.TransicionEstadoInvalidaException;
 import com.example.ecommerce.domain.valueobject.CambioEstadoPedido;
@@ -10,10 +12,13 @@ import com.example.ecommerce.domain.valueobject.DatosEntrega;
 import com.example.ecommerce.domain.valueobject.DetallePedido;
 import com.example.ecommerce.domain.valueobject.EstadoPedido;
 import com.example.ecommerce.domain.valueobject.NumeroPedido;
+import com.example.ecommerce.domain.valueobject.PagoConfirmado;
 import com.example.ecommerce.domain.valueobject.QuienCancela;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -42,6 +47,15 @@ import java.util.regex.Pattern;
  *   <li>RF-07.7: cada cambio queda en el historial (fecha, estado anterior,
  *       nuevo, quién y motivo). El registro del pedido es la primera entrada.</li>
  * </ul>
+ *
+ * <p>F-09 (confirmación del pago) / RN11:</p>
+ * <ul>
+ *   <li>Pendiente → Confirmado solo ocurre con {@link #confirmarPago}: el
+ *       personal registra que el dinero llegó. {@link #avanzarA} no lo permite.</li>
+ *   <li>RF-09.3: el monto recibido debe ser igual al total del pedido.</li>
+ *   <li>RF-09.4: la fecha de recepción no puede ser futura ni anterior al
+ *       día en que se registró el pedido (hora de Colombia).</li>
+ * </ul>
  */
 public class Pedido {
 
@@ -52,6 +66,9 @@ public class Pedido {
     /** RF-07.5: longitud máxima del motivo de cancelación (columna de 300). */
     public static final int MAX_MOTIVO_CANCELACION = 300;
 
+    /** RF-09.4: las fechas del negocio se cuentan en la hora de Colombia. */
+    private static final ZoneId ZONA_NEGOCIO = ZoneId.of("America/Bogota");
+
     private final long id;
     private final long clienteId;
     private final List<DetallePedido> detalles;
@@ -60,6 +77,8 @@ public class Pedido {
     private final String claveIdempotencia;
     private EstadoPedido estado;
     private final List<CambioEstadoPedido> historial;
+    /** F-09: null mientras el pago no se haya confirmado. */
+    private PagoConfirmado pago;
 
     /** Reconstruye un pedido sin historial cargado (pruebas y datos anteriores a F-07). */
     public Pedido(long id, long clienteId, List<DetallePedido> detalles, DatosEntrega entrega,
@@ -71,6 +90,13 @@ public class Pedido {
     public Pedido(long id, long clienteId, List<DetallePedido> detalles, DatosEntrega entrega,
                   Instant creadoEn, String claveIdempotencia, EstadoPedido estado,
                   List<CambioEstadoPedido> historial) {
+        this(id, clienteId, detalles, entrega, creadoEn, claveIdempotencia, estado, historial, null);
+    }
+
+    /** Reconstruye un pedido existente con su historial y, si lo tiene, su pago confirmado (F-09). */
+    public Pedido(long id, long clienteId, List<DetallePedido> detalles, DatosEntrega entrega,
+                  Instant creadoEn, String claveIdempotencia, EstadoPedido estado,
+                  List<CambioEstadoPedido> historial, PagoConfirmado pago) {
         if (detalles == null || detalles.isEmpty()) {
             throw new PedidoSinDetallesException();
         }
@@ -85,6 +111,7 @@ public class Pedido {
         this.claveIdempotencia = claveIdempotencia.toLowerCase();
         this.estado = Objects.requireNonNull(estado, "estado");
         this.historial = new ArrayList<>(Objects.requireNonNull(historial, "historial"));
+        this.pago = pago;
     }
 
     /**
@@ -101,23 +128,60 @@ public class Pedido {
 
     /** Devuelve una copia con el id asignado por la base de datos. */
     public Pedido conId(long nuevoId) {
-        return new Pedido(nuevoId, clienteId, detalles, entrega, creadoEn, claveIdempotencia, estado, historial);
+        return new Pedido(nuevoId, clienteId, detalles, entrega, creadoEn, claveIdempotencia, estado, historial,
+                pago);
     }
 
     /**
      * RF-07.3 / RF-07.4: avanza el pedido al siguiente estado del flujo normal
-     * (Confirmado, En proceso, En camino, Entregado, Completado). La
-     * cancelación no pasa por aquí, porque exige motivo ({@link #cancelar}).
+     * (En proceso, En camino, Entregado, Completado). Ni la confirmación
+     * (exige el pago, {@link #confirmarPago}) ni la cancelación (exige motivo,
+     * {@link #cancelar}) pasan por aquí.
      *
      * @param nuevoEstado debe ser exactamente {@link EstadoPedido#siguiente()} del actual
+     * @throws PagoNoConfirmadoException        si se intenta pasar a Confirmado sin registrar el pago (RN11)
      * @throws TransicionEstadoInvalidaException si el diagrama no permite ese paso
      */
     public void avanzarA(EstadoPedido nuevoEstado, long usuarioId, Instant ahora) {
         Objects.requireNonNull(nuevoEstado, "nuevoEstado");
+        if (nuevoEstado == EstadoPedido.CONFIRMADO && estado == EstadoPedido.PENDIENTE) {
+            throw new PagoNoConfirmadoException();
+        }
         if (estado.siguiente().filter(nuevoEstado::equals).isEmpty()) {
             throw new TransicionEstadoInvalidaException(estado.name(), nuevoEstado.name());
         }
         registrarCambio(nuevoEstado, usuarioId, ahora, null);
+    }
+
+    /**
+     * F-09 / RN11: el personal confirma que Lovely Girl recibió el dinero del
+     * pedido. Solo desde Pendiente; el pedido pasa a Confirmado y el pago
+     * queda guardado. La factura la emite el caso de uso en la misma
+     * transacción (RF-09.5).
+     *
+     * @throws TransicionEstadoInvalidaException si el pedido ya no está Pendiente
+     * @throws PagoInvalidoException             si el monto no es el total o la fecha no es válida
+     */
+    public void confirmarPago(PagoConfirmado pagoRecibido) {
+        Objects.requireNonNull(pagoRecibido, "pagoRecibido");
+        if (estado != EstadoPedido.PENDIENTE) {
+            throw new TransicionEstadoInvalidaException(estado.name(), EstadoPedido.CONFIRMADO.name());
+        }
+        BigDecimal total = calcularTotal();
+        if (pagoRecibido.monto().compareTo(total) != 0) {
+            throw new PagoInvalidoException("El monto recibido ($ " + pagoRecibido.monto().toPlainString()
+                    + ") no coincide con el total del pedido ($ " + total.toPlainString() + ").");
+        }
+        LocalDate diaPedido = LocalDate.ofInstant(creadoEn, ZONA_NEGOCIO);
+        LocalDate hoy = LocalDate.ofInstant(pagoRecibido.confirmadoEn(), ZONA_NEGOCIO);
+        if (pagoRecibido.fechaRecepcion().isAfter(hoy)) {
+            throw new PagoInvalidoException("La fecha de recepción del pago no puede ser futura.");
+        }
+        if (pagoRecibido.fechaRecepcion().isBefore(diaPedido)) {
+            throw new PagoInvalidoException("La fecha de recepción del pago no puede ser anterior al pedido.");
+        }
+        registrarCambio(EstadoPedido.CONFIRMADO, pagoRecibido.confirmadoPor(), pagoRecibido.confirmadoEn(), null);
+        this.pago = pagoRecibido;
     }
 
     /**
@@ -159,6 +223,11 @@ public class Pedido {
         historial.add(new CambioEstadoPedido(estado, nuevoEstado, Objects.requireNonNull(ahora, "ahora"),
                 usuarioId, motivo));
         this.estado = nuevoEstado;
+    }
+
+    /** F-09: el pago confirmado, si ya se registró. */
+    public Optional<PagoConfirmado> getPago() {
+        return Optional.ofNullable(pago);
     }
 
     /** RF-07.5: motivo de la cancelación, si el pedido está cancelado. */

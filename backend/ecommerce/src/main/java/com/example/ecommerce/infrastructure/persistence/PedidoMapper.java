@@ -5,6 +5,8 @@ import com.example.ecommerce.domain.valueobject.CambioEstadoPedido;
 import com.example.ecommerce.domain.valueobject.DatosEntrega;
 import com.example.ecommerce.domain.valueobject.DetallePedido;
 import com.example.ecommerce.domain.valueobject.EstadoPedido;
+import com.example.ecommerce.domain.valueobject.MedioPago;
+import com.example.ecommerce.domain.valueobject.PagoConfirmado;
 import com.example.ecommerce.domain.valueobject.Precio;
 import com.example.ecommerce.domain.valueobject.TipoEntrega;
 import com.example.ecommerce.infrastructure.persistence.jpa.DetallePedidoJpaEntity;
@@ -29,7 +31,23 @@ public final class PedidoMapper {
         return new Pedido(entidad.getId(), entidad.getClienteId(), detalles, entrega,
                 FechasUtc.aInstante(entidad.getCreadoEn()), entidad.getClaveIdempotencia(),
                 EstadoPedido.valueOf(entidad.getEstado()),
-                entidad.getHistorial().stream().map(PedidoMapper::aCambio).toList());
+                entidad.getHistorial().stream().map(PedidoMapper::aCambio).toList(), aPago(entidad));
+    }
+
+    /** F-09: null si el pedido todavía no tiene pago confirmado. */
+    private static PagoConfirmado aPago(PedidoJpaEntity entidad) {
+        if (entidad.getPagoMedio() == null) {
+            return null;
+        }
+        return new PagoConfirmado(MedioPago.valueOf(entidad.getPagoMedio()), entidad.getPagoReferencia(),
+                entidad.getPagoMonto(), entidad.getPagoFechaRecepcion(), entidad.getPagoConfirmadoPor(),
+                FechasUtc.aInstante(entidad.getPagoConfirmadoEn()));
+    }
+
+    /** F-09: copia el pago del dominio a la fila, si el pedido lo tiene. */
+    public static void copiarPago(Pedido pedido, PedidoJpaEntity entidad) {
+        pedido.getPago().ifPresent(pago -> entidad.registrarPago(pago.medio().name(), pago.referencia(),
+                pago.monto(), pago.fechaRecepcion(), pago.confirmadoPor(), FechasUtc.aColumna(pago.confirmadoEn())));
     }
 
     private static CambioEstadoPedido aCambio(HistorialEstadoPedidoJpaEntity fila) {
@@ -56,9 +74,11 @@ public final class PedidoMapper {
                         d.getPrecioUnitario().valor()))
                 .toList();
         DatosEntrega entrega = pedido.getEntrega();
-        return new PedidoJpaEntity(id, pedido.getClienteId(), pedido.getEstado().name(),
+        PedidoJpaEntity entidad = new PedidoJpaEntity(id, pedido.getClienteId(), pedido.getEstado().name(),
                 FechasUtc.aColumna(pedido.getCreadoEn()), pedido.getClaveIdempotencia(), entrega.getTipo().name(),
                 entrega.getNombreContacto(), entrega.getTelefono().getValor(), entrega.getDireccion(),
                 entrega.getCiudad(), entrega.getIndicaciones(), detalles, aFilasHistorial(pedido.getHistorial()));
+        copiarPago(pedido, entidad);
+        return entidad;
     }
 }

@@ -47,7 +47,26 @@
       @if (p.motivoCancelacion) {
         <p class="motivo"><strong>Motivo de la cancelación:</strong> {{ p.motivoCancelacion }}</p>
       }
+      @if (p.estado === 'PENDIENTE') {
+        <p class="nota-pago">
+          Pago pendiente: el pedido se confirma y se factura cuando registres que el dinero llegó.
+        </p>
+      }
     </section>
+
+    <!-- F-09 (RF-09.2): datos del pago confirmado -->
+    @if (p.pago; as pago) {
+      <section class="tarjeta">
+        <h2>Pago confirmado</h2>
+        <dl class="datos-pago">
+          <div><dt>Medio</dt><dd>{{ etiquetaMedio(pago.medio) }}</dd></div>
+          <div><dt>Referencia</dt><dd>{{ pago.referencia ?? '—' }}</dd></div>
+          <div><dt>Monto recibido</dt><dd>$ {{ pago.monto | number: '1.0-0' }}</dd></div>
+          <div><dt>Fecha de recepción</dt><dd>{{ fechaDia(pago.fechaRecepcion) }}</dd></div>
+          <div><dt>Confirmado por</dt><dd>{{ pago.confirmadoPor }} · {{ fecha(pago.confirmadoEn) }}</dd></div>
+        </dl>
+      </section>
+    }
 
     <div class="columnas">
       <!-- RF-07.2 -->
@@ -156,6 +175,16 @@
       [textoConfirmar]="textoAvanzar()"
       (confirmar)="confirmarAvance()"
       (cancelar)="confirmandoAvance.set(false)"
+    />
+
+    <app-dialogo-confirmar-pago
+      [abierto]="pagoAbierto()"
+      [numeroPedido]="p.numero"
+      [total]="p.total"
+      [enviando]="confirmandoPago()"
+      [error]="errorPago()"
+      (confirmar)="confirmarPago($event)"
+      (cerrar)="pagoAbierto.set(false)"
     />
 
     <app-dialogo-cancelar-pedido

@@ -108,7 +108,7 @@ public class DescargarFacturaUseCaseTest {
 
     private Pedido confirmado() {
         Pedido pedido = nuevo();
-        pedido.avanzarA(EstadoPedido.CONFIRMADO, ADMIN, Pedidos.AHORA);
+        Pedidos.confirmarPago(pedido, ADMIN);
         return pedidos.guardar(pedido);
     }
 }
