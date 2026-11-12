@@ -121,6 +121,34 @@ export interface PedidoGestion {
   factura: { numero: string; emitidaEn: string; anulada: boolean } | null;
   /** RF-08.5: se puede descargar (la pantalla solo lo ofrece a la Administradora). */
   facturaDisponible: boolean;
+  /** F-09: pago confirmado por el personal (null mientras el pedido esté Pendiente). */
+  pago: PagoPedido | null;
+}
+
+/** F-09 (RF-09.2): medios de pago de la versión 1.0 (sin pagos en línea). */
+export type MedioPago = 'TRANSFERENCIA' | 'EFECTIVO';
+
+export const OPCIONES_MEDIO_PAGO: readonly { valor: MedioPago; etiqueta: string }[] = [
+  { valor: 'TRANSFERENCIA', etiqueta: 'Transferencia (banco, Nequi o Daviplata)' },
+  { valor: 'EFECTIVO', etiqueta: 'Efectivo' },
+];
+
+/** F-09: datos de la confirmación del pago, tal como los guarda el backend. */
+export interface PagoPedido {
+  medio: MedioPago;
+  referencia: string | null;
+  monto: number;
+  fechaRecepcion: string;
+  confirmadoPor: string;
+  confirmadoEn: string;
+}
+
+/** F-09: lo que envía el personal para confirmar el pago (POST /api/pedidos/gestion/{id}/pago). */
+export interface DatosConfirmacionPago {
+  medio: MedioPago;
+  referencia: string | null;
+  monto: number;
+  fechaRecepcion: string;
 }
 
 /** Orden del flujo normal, para el filtro por estado (RF-07.1). */
@@ -164,7 +192,7 @@ export function etiquetaEstadoPedido(estado: EstadoPedido | string, tipoEntrega?
 export function textoAccionAvanzar(destino: EstadoPedido, tipoEntrega: TipoEntrega | string): string {
   switch (destino) {
     case 'CONFIRMADO':
-      return 'Confirmar pedido';
+      return 'Confirmar pago';
     case 'EN_PROCESO':
       return 'Empezar a preparar';
     case 'EN_CAMINO':

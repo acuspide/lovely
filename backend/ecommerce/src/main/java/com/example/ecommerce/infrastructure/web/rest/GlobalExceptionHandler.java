@@ -2,26 +2,27 @@ package com.example.ecommerce.infrastructure.web.rest;
 
 import com.example.ecommerce.application.AlmacenamientoImagenException;
 import com.example.ecommerce.application.GeneradorPdfFactura.GeneracionPdfException;
-import com.example.ecommerce.domain.exception.FacturaDuplicadaException;
-import com.example.ecommerce.domain.exception.FacturaNoDisponibleException;
 import com.example.ecommerce.domain.exception.ArticuloAgotadoException;
 import com.example.ecommerce.domain.exception.ArticuloConPedidosActivosException;
 import com.example.ecommerce.domain.exception.ArticuloInactivoException;
-import com.example.ecommerce.domain.exception.CancelacionNoPermitidaException;
-import com.example.ecommerce.domain.exception.PedidoNoEncontradoException;
-import com.example.ecommerce.domain.exception.TransicionEstadoInvalidaException;
-import com.example.ecommerce.domain.exception.StockInsuficienteException;
 import com.example.ecommerce.domain.exception.ArticuloNoEncontradoException;
+import com.example.ecommerce.domain.exception.CancelacionNoPermitidaException;
 import com.example.ecommerce.domain.exception.CorreoElectronicoDuplicadoException;
 import com.example.ecommerce.domain.exception.CredencialesInvalidasException;
 import com.example.ecommerce.domain.exception.CuentaBloqueadaException;
+import com.example.ecommerce.domain.exception.FacturaDuplicadaException;
+import com.example.ecommerce.domain.exception.FacturaNoDisponibleException;
 import com.example.ecommerce.domain.exception.NombreArticuloDuplicadoException;
+import com.example.ecommerce.domain.exception.PagoNoConfirmadoException;
+import com.example.ecommerce.domain.exception.PedidoNoEncontradoException;
 import com.example.ecommerce.domain.exception.ReglaDominioException;
-import com.example.ecommerce.domain.valueobject.ArchivoImagen;
+import com.example.ecommerce.domain.exception.StockInsuficienteException;
 import com.example.ecommerce.domain.exception.TokenInvalidoException;
+import com.example.ecommerce.domain.exception.TransicionEstadoInvalidaException;
 import com.example.ecommerce.domain.exception.UltimaAdministradoraActivaException;
 import com.example.ecommerce.domain.exception.UsuarioInactivoException;
 import com.example.ecommerce.domain.exception.UsuarioNoEncontradoException;
+import com.example.ecommerce.domain.valueobject.ArchivoImagen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -157,7 +158,9 @@ public class GlobalExceptionHandler {
 
     // RF-07.3 / RF-07.4 / RF-07.5: el pedido ya no está en el estado que se vio en pantalla
     // (otra persona lo cambió) o el diagrama no permite ese paso. La web recarga el pedido.
-    @ExceptionHandler({TransicionEstadoInvalidaException.class, CancelacionNoPermitidaException.class})
+    // RN11: pasar a Confirmado sin registrar el pago también es un paso no permitido.
+    @ExceptionHandler({TransicionEstadoInvalidaException.class, CancelacionNoPermitidaException.class,
+            PagoNoConfirmadoException.class})
     public ProblemDetail cambioDeEstadoNoPermitido(RuntimeException ex) {
         ProblemDetail problema = problema(HttpStatus.CONFLICT, ex.getMessage());
         problema.setProperty("accionSugerida", "RECARGAR_PEDIDO");

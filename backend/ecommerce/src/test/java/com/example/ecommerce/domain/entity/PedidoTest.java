@@ -3,12 +3,16 @@ package com.example.ecommerce.domain.entity;
 import com.example.ecommerce.domain.exception.CancelacionNoPermitidaException;
 import com.example.ecommerce.domain.exception.ClaveIdempotenciaInvalidaException;
 import com.example.ecommerce.domain.exception.MotivoCancelacionInvalidoException;
+import com.example.ecommerce.domain.exception.PagoInvalidoException;
+import com.example.ecommerce.domain.exception.PagoNoConfirmadoException;
 import com.example.ecommerce.domain.exception.PedidoSinDetallesException;
 import com.example.ecommerce.domain.exception.ReglaDominioException;
 import com.example.ecommerce.domain.exception.TransicionEstadoInvalidaException;
 import com.example.ecommerce.domain.valueobject.CambioEstadoPedido;
 import com.example.ecommerce.domain.valueobject.DetallePedido;
 import com.example.ecommerce.domain.valueobject.EstadoPedido;
+import com.example.ecommerce.domain.valueobject.MedioPago;
+import com.example.ecommerce.domain.valueobject.PagoConfirmado;
 import com.example.ecommerce.domain.valueobject.Precio;
 import com.example.ecommerce.domain.valueobject.QuienCancela;
 import com.example.ecommerce.support.Pedidos;
@@ -16,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -92,7 +97,8 @@ public class PedidoTest {
         Pedido pedido = Pedidos.pendiente(100L, new DetallePedido(1L, "Labial", 1, DIEZ_MIL));
         Instant despues = Pedidos.AHORA.plusSeconds(60);
 
-        for (EstadoPedido siguiente : List.of(EstadoPedido.CONFIRMADO, EstadoPedido.EN_PROCESO,
+        pedido.confirmarPago(Pedidos.pagoPorElTotal(pedido, ASESORA, despues));
+        for (EstadoPedido siguiente : List.of(EstadoPedido.EN_PROCESO,
                 EstadoPedido.EN_CAMINO, EstadoPedido.ENTREGADO, EstadoPedido.COMPLETADO)) {
             pedido.avanzarA(siguiente, ASESORA, despues);
         }
@@ -174,7 +180,11 @@ public class PedidoTest {
     private static Pedido avanzadoHasta(EstadoPedido destino) {
         Pedido pedido = Pedidos.pendiente(100L, new DetallePedido(1L, "Labial", 1, DIEZ_MIL));
         while (pedido.getEstado() != destino) {
-            pedido.avanzarA(pedido.getEstado().siguiente().orElseThrow(), ASESORA, Pedidos.AHORA);
+            if (pedido.getEstado() == EstadoPedido.PENDIENTE) {
+                Pedidos.confirmarPago(pedido, ASESORA);
+            } else {
+                pedido.avanzarA(pedido.getEstado().siguiente().orElseThrow(), ASESORA, Pedidos.AHORA);
+            }
         }
         return pedido;
     }
@@ -187,5 +197,85 @@ public class PedidoTest {
         assertEquals(new BigDecimal("30000"), pedido.calcularTotal());
         assertEquals(3, pedido.cantidadDeUnidades());
         assertTrue(pedido.incluyeArticulo(2L));
+    }
+
+    // ---- F-09: confirmación del pago (RN11) ----
+
+    @Test
+    void unPedidoPendienteNoPasaAConfirmadoSinRegistrarElPago() {
+        // RN11 / RF-09.6
+        Pedido pedido = Pedidos.pendiente(100L, new DetallePedido(1L, "Labial", 2, DIEZ_MIL));
+
+        assertThrows(PagoNoConfirmadoException.class,
+                () -> pedido.avanzarA(EstadoPedido.CONFIRMADO, ASESORA, Pedidos.AHORA));
+        assertEquals(EstadoPedido.PENDIENTE, pedido.getEstado());
+        assertTrue(pedido.getPago().isEmpty());
+    }
+
+    @Test
+    void alConfirmarElPagoQuedanSusDatosYElPedidoPasaAConfirmado() {
+        // RF-09.2 / RF-09.5 / RF-07.7
+        Pedido pedido = Pedidos.pendiente(100L, new DetallePedido(1L, "Labial", 2, DIEZ_MIL));
+        Instant despues = Pedidos.AHORA.plusSeconds(1800);
+
+        pedido.confirmarPago(new PagoConfirmado(MedioPago.TRANSFERENCIA, "  TRX-998877  ", new BigDecimal("20000"),
+                LocalDate.of(2026, 10, 16), ASESORA, despues));
+
+        assertEquals(EstadoPedido.CONFIRMADO, pedido.getEstado());
+        PagoConfirmado pago = pedido.getPago().orElseThrow();
+        assertEquals("TRX-998877", pago.referencia());
+        assertEquals(ASESORA, pago.confirmadoPor());
+        CambioEstadoPedido ultimo = pedido.getHistorial().get(1);
+        assertEquals(EstadoPedido.PENDIENTE, ultimo.estadoAnterior());
+        assertEquals(EstadoPedido.CONFIRMADO, ultimo.estadoNuevo());
+        assertEquals(ASESORA, ultimo.usuarioId());
+        assertEquals(despues, ultimo.fecha());
+    }
+
+    @Test
+    void elMontoRecibidoDebeSerIgualAlTotal() {
+        // RF-09.3: 2 × $10.000 = $20.000
+        Pedido pedido = Pedidos.pendiente(100L, new DetallePedido(1L, "Labial", 2, DIEZ_MIL));
+
+        var error = assertThrows(PagoInvalidoException.class, () -> pedido.confirmarPago(new PagoConfirmado(
+                MedioPago.EFECTIVO, null, new BigDecimal("15000"), LocalDate.of(2026, 10, 16), ASESORA,
+                Pedidos.AHORA)));
+        assertTrue(error.getMessage().contains("no coincide con el total"));
+        assertEquals(EstadoPedido.PENDIENTE, pedido.getEstado());
+    }
+
+    @Test
+    void unaTransferenciaExigeReferenciaYElEfectivoNo() {
+        // RF-09.2
+        assertThrows(PagoInvalidoException.class, () -> new PagoConfirmado(MedioPago.TRANSFERENCIA, "  ",
+                new BigDecimal("20000"), LocalDate.of(2026, 10, 16), ASESORA, Pedidos.AHORA));
+        PagoConfirmado efectivo = new PagoConfirmado(MedioPago.EFECTIVO, null, new BigDecimal("20000"),
+                LocalDate.of(2026, 10, 16), ASESORA, Pedidos.AHORA);
+        assertNull(efectivo.referencia());
+    }
+
+    @Test
+    void laFechaDeRecepcionNoPuedeSerFuturaNiAnteriorAlPedido() {
+        // RF-09.4: el pedido es del 16 de octubre y se confirma ese mismo día
+        Pedido pedido = Pedidos.pendiente(100L, new DetallePedido(1L, "Labial", 2, DIEZ_MIL));
+        BigDecimal total = pedido.calcularTotal();
+
+        assertThrows(PagoInvalidoException.class, () -> pedido.confirmarPago(new PagoConfirmado(
+                MedioPago.EFECTIVO, null, total, LocalDate.of(2026, 10, 17), ASESORA, Pedidos.AHORA)));
+        assertThrows(PagoInvalidoException.class, () -> pedido.confirmarPago(new PagoConfirmado(
+                MedioPago.EFECTIVO, null, total, LocalDate.of(2026, 10, 15), ASESORA, Pedidos.AHORA)));
+        assertEquals(EstadoPedido.PENDIENTE, pedido.getEstado());
+    }
+
+    @Test
+    void elPagoSoloSeConfirmaUnaVezYNoEnUnPedidoCancelado() {
+        // RF-09.1 / RF-07.4
+        Pedido confirmado = Pedidos.pendiente(100L, new DetallePedido(1L, "Labial", 1, DIEZ_MIL));
+        Pedidos.confirmarPago(confirmado, ASESORA);
+        Pedido cancelado = Pedidos.pendiente(100L, new DetallePedido(1L, "Labial", 1, DIEZ_MIL));
+        cancelado.cancelar(QuienCancela.CLIENTA, 100L, "Ya no lo necesito", Pedidos.AHORA);
+
+        assertThrows(TransicionEstadoInvalidaException.class, () -> Pedidos.confirmarPago(confirmado, ASESORA));
+        assertThrows(TransicionEstadoInvalidaException.class, () -> Pedidos.confirmarPago(cancelado, ASESORA));
     }
 }

@@ -11,7 +11,9 @@ import { guardarArchivo } from '../../../core/http/descarga-archivo';
 import { extraerMensajeError } from '../../../core/http/mensaje-error';
 import { GestionPedidosService } from '../../../core/pedidos/gestion-pedidos.service';
 import {
+  DatosConfirmacionPago,
   EstadoPedido,
+  OPCIONES_MEDIO_PAGO,
   PedidoGestion,
   etiquetaEstadoPedido,
   nombreArchivoFactura,
@@ -20,6 +22,7 @@ import {
 import { BarraSuperior } from '../../../shared/components/barra-superior/barra-superior';
 import { DialogoCancelarPedido } from '../../../shared/components/dialogo-cancelar-pedido/dialogo-cancelar-pedido';
 import { DialogoConfirmacion } from '../../../shared/components/dialogo-confirmacion/dialogo-confirmacion';
+import { DialogoConfirmarPago } from '../../../shared/components/dialogo-confirmar-pago/dialogo-confirmar-pago';
 import { InsigniaEstadoPedido } from '../../../shared/components/insignia-estado-pedido/insignia-estado-pedido';
 
 /**
@@ -28,6 +31,8 @@ import { InsigniaEstadoPedido } from '../../../shared/components/insignia-estado
  * - RF-07.2: productos, cantidades, precios, total, contacto y entrega.
  * - RF-07.3 / RF-07.4: un solo botón con el siguiente estado del diagrama;
  *   nunca se ofrece volver atrás. Se pide confirmación antes de cambiarlo.
+ * - F-09 / RN11: de Pendiente a Confirmado solo se pasa registrando el pago
+ *   (medio, referencia, monto y fecha); en ese momento se emite la factura.
  * - RF-07.5 / RF-07.6: "Cancelar pedido" (con motivo) solo para la
  *   Administradora y solo en Pendiente o Confirmado; el stock vuelve.
  * - RF-07.7: historial con fecha, estado anterior, nuevo, quién y motivo.
@@ -39,7 +44,15 @@ import { InsigniaEstadoPedido } from '../../../shared/components/insignia-estado
  */
 @Component({
   selector: 'app-detalle-pedido-page',
-  imports: [DecimalPipe, RouterLink, BarraSuperior, DialogoConfirmacion, DialogoCancelarPedido, InsigniaEstadoPedido],
+  imports: [
+    DecimalPipe,
+    RouterLink,
+    BarraSuperior,
+    DialogoConfirmacion,
+    DialogoCancelarPedido,
+    DialogoConfirmarPago,
+    InsigniaEstadoPedido,
+  ],
   templateUrl: './detalle-pedido-page.html',
   styleUrl: './detalle-pedido-page.scss',
 })
@@ -56,6 +69,9 @@ export class DetallePedidoPage {
 
   protected readonly confirmandoAvance = signal(false);
   protected readonly avanzando = signal(false);
+  protected readonly pagoAbierto = signal(false);
+  protected readonly confirmandoPago = signal(false);
+  protected readonly errorPago = signal<string | null>(null);
   protected readonly cancelacionAbierta = signal(false);
   protected readonly cancelando = signal(false);
   protected readonly errorCancelacion = signal<string | null>(null);
@@ -105,7 +121,47 @@ export class DetallePedidoPage {
   protected pedirAvance(): void {
     this.error.set(null);
     this.exito.set(null);
+    // RN11: el primer paso no es un simple cambio de estado, exige el pago.
+    if (this.pedido()?.siguienteEstado === 'CONFIRMADO') {
+      this.errorPago.set(null);
+      this.pagoAbierto.set(true);
+      return;
+    }
     this.confirmandoAvance.set(true);
+  }
+
+  // ---- F-09: confirmar el pago ----
+
+  protected confirmarPago(datos: DatosConfirmacionPago): void {
+    const p = this.pedido();
+    if (!p || this.confirmandoPago()) {
+      return;
+    }
+    this.confirmandoPago.set(true);
+    this.errorPago.set(null);
+    this.gestionPedidos.confirmarPago(p.id, datos).subscribe({
+      next: (actualizado) => {
+        this.pedido.set(actualizado);
+        this.confirmandoPago.set(false);
+        this.pagoAbierto.set(false);
+        this.exito.set(
+          `Pago confirmado. El pedido quedó en «Confirmado» y se emitió la factura ${actualizado.factura?.numero ?? ''}.`,
+        );
+      },
+      error: (err: unknown) => {
+        this.confirmandoPago.set(false);
+        if (err instanceof HttpErrorResponse && err.status === 409) {
+          this.pagoAbierto.set(false);
+          this.mostrarErrorYRecargarSiCambio(err, 'No se pudo confirmar el pago.');
+        } else {
+          this.errorPago.set(extraerMensajeError(err, 'No se pudo confirmar el pago.'));
+        }
+      },
+    });
+  }
+
+  protected etiquetaMedio(medio: string): string {
+    return OPCIONES_MEDIO_PAGO.find((o) => o.valor === medio)?.etiqueta ?? medio;
   }
 
   protected confirmarAvance(): void {
@@ -206,6 +262,12 @@ export class DetallePedidoPage {
 
   protected fecha(iso: string): string {
     return new Date(iso).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  /** F-09: fecha sin hora (yyyy-mm-dd) en formato local, sin correrla por la zona horaria. */
+  protected fechaDia(iso: string): string {
+    const [anio, mes, dia] = iso.split('-').map(Number);
+    return new Date(anio, mes - 1, dia).toLocaleDateString('es-CO', { dateStyle: 'medium' });
   }
 
   protected etiquetaEntrega(tipo: string): string {

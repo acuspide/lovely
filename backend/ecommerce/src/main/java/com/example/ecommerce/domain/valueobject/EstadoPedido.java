@@ -21,15 +21,15 @@ public enum EstadoPedido {
 
     /** Recién registrado por la clienta (RF-05.1). */
     PENDIENTE,
-    /** El pago se confirmó. */
+    /** El personal confirmó que recibió el pago (F-09, RN11); en este paso se emite la factura. */
     CONFIRMADO,
     /** Se está preparando. */
     EN_PROCESO,
     /** Despachado (o, en retiro en tienda, listo para recoger). */
     EN_CAMINO,
-    /** La clienta lo recibió. */
+    /** La clienta lo recibió (o lo recogió en la tienda). */
     ENTREGADO,
-    /** Proceso cerrado (estado final). */
+    /** Cierre administrativo: entregado, pagado y facturado, sin reclamos pendientes (estado final). */
     COMPLETADO,
     /** Anulado, con motivo (estado final). */
     CANCELADO;

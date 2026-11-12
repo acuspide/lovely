@@ -17,7 +17,8 @@ citan en la documentación del código.
 | F-05 Registro de pedidos | La clienta confirma la compra y recibe su número de pedido (LG-000001) y un correo de confirmación. |
 | F-06 Descuento de inventario | El stock se descuenta al registrar el pedido, sin sobreventa aunque compren varias personas a la vez. |
 | F-07 Estados del pedido | El personal avanza el pedido según el diagrama de estados, con historial; la cancelación exige motivo y devuelve el stock. La clienta ve "Mis pedidos". |
-| F-08 Factura en PDF | La factura (FV-000001) se emite al confirmar el pedido, con IVA desglosado; la clienta y la Administradora la descargan. Si el pedido se cancela, queda anulada. |
+| F-08 Factura en PDF | La factura (FV-000001) se emite cuando el personal confirma el pago (Pendiente → Confirmado), con IVA desglosado; la clienta y la Administradora la descargan. Si el pedido se cancela, queda anulada. |
+| F-09 Confirmación del pago | La Asesora de ventas o la Administradora registran que el dinero llegó (medio, referencia, monto, fecha). Solo entonces el pedido pasa a Confirmado y se emite la factura (RN11). |
 
 ## Estructura
 
@@ -115,3 +116,17 @@ npx ng test --watch=false
 
 > La factura en PDF es un comprobante de venta generado por el sistema; no reemplaza la factura
 > electrónica de venta ante la DIAN (RNF-11).
+
+## F-09: Confirmación del pago
+
+La versión 1.0 no procesa pagos en línea. La clienta paga por transferencia (banco, Nequi o
+Daviplata) o en efectivo, y el personal confirma en el sistema que el dinero llegó.
+
+| Requisito | Cómo se cumple |
+|-----------|----------------|
+| RF-09.1 Quién confirma | La Asesora de ventas o la Administradora, en el detalle del pedido (`/pedidos/:id`, botón "Confirmar pago"). Endpoint `POST /api/pedidos/gestion/{id}/pago`. La clienta no puede (403). |
+| RF-09.2 Datos del pago | Medio (Transferencia o Efectivo), referencia (obligatoria en transferencias, 4 a 60 caracteres), monto recibido, fecha de recepción, quién confirmó y cuándo. Se guardan en el pedido (migración V10). |
+| RF-09.3 Monto | Debe ser igual al total del pedido; si no, se rechaza y el pedido sigue Pendiente. |
+| RF-09.4 Fecha | No puede ser futura ni anterior al día del pedido (hora de Colombia). |
+| RF-09.5 Confirmado y factura | En la misma transacción el pedido pasa a Confirmado y se emite la factura. |
+| RF-09.6 Sin pago no hay confirmación | Un cambio de estado directo de Pendiente a Confirmado se rechaza (409) y un pedido Pendiente no tiene factura. Si el pago no llega, la clienta o la Administradora cancelan el pedido con motivo y el stock vuelve. |

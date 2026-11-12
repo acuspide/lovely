@@ -11,14 +11,15 @@ import java.time.Clock;
 /**
  * RF-07.3 / RF-07.4: el personal (Administradora o Asesora de ventas) pasa
  * un pedido al siguiente estado del diagrama: Confirmado → En proceso → En
- * camino → Entregado → Completado. Nunca hacia atrás.
+ * camino → Entregado → Completado. Nunca hacia atrás. Pendiente → Confirmado
+ * no pasa por aquí: exige confirmar el pago ({@link ConfirmarPagoUseCase}, RN11).
  *
  * <p>Quien hace el cambio envía también el estado al que quiere llevarlo. Si
  * otra persona ya lo cambió (por ejemplo, la clienta lo canceló), el paso ya
  * no es el siguiente y se rechaza, en lugar de avanzar a ciegas.</p>
  *
- * <p>RF-08.1: al pasar a Confirmado se emite la factura en la misma
- * transacción: o quedan las dos cosas o ninguna.</p>
+ * <p>La factura se sigue pidiendo al emisor por si el pedido es anterior a
+ * F-09 y llegó a Confirmado sin factura (RF-08.1).</p>
  */
 public class AvanzarEstadoPedidoUseCase {
 

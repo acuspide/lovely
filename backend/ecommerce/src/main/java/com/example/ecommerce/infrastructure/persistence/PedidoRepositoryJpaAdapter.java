@@ -81,8 +81,8 @@ public class PedidoRepositoryJpaAdapter implements PedidoRepository {
     }
 
     /**
-     * F-07: en un pedido existente solo cambian el estado y el historial (que
-     * solo crece). Se actualiza la fila ya cargada en la transacción en lugar
+     * F-07 / F-09: en un pedido existente solo cambian el estado, el historial
+     * (que solo crece) y, al confirmarse, el pago. Se actualiza la fila ya cargada en la transacción en lugar
      * de reemplazar el pedido completo, para no borrar y reinsertar sus detalles.
      */
     private Pedido actualizarEstado(Pedido pedido) {
@@ -92,6 +92,7 @@ public class PedidoRepositoryJpaAdapter implements PedidoRepository {
         int yaGuardadas = Math.min(entidad.getHistorial().size(), historial.size());
         entidad.actualizarEstado(pedido.getEstado().name(),
                 PedidoMapper.aFilasHistorial(historial.subList(yaGuardadas, historial.size())));
+        PedidoMapper.copiarPago(pedido, entidad);
         return PedidoMapper.aDominio(jpaRepository.saveAndFlush(entidad));
     }
 

@@ -73,7 +73,7 @@ public class CancelarPedidoUseCaseTest {
     @Test
     void laAdministradoraCancelaUnPedidoConfirmado() {
         Pedido pedido = registrarVendiendo(1, 0);
-        pedido.avanzarA(EstadoPedido.CONFIRMADO, ADMIN, Pedidos.AHORA);
+        Pedidos.confirmarPago(pedido, ADMIN);
         pedidos.guardar(pedido);
 
         useCase.ejecutar(new CancelarPedidoUseCase.Solicitud(
@@ -87,7 +87,7 @@ public class CancelarPedidoUseCaseTest {
     void siElPedidoTeniaFacturaQuedaAnulada() {
         // RF-08.6
         Pedido pedido = registrarVendiendo(1, 0);
-        pedido.avanzarA(EstadoPedido.CONFIRMADO, ADMIN, Pedidos.AHORA);
+        Pedidos.confirmarPago(pedido, ADMIN);
         pedidos.guardar(pedido);
         facturas.guardar(Factura.emitir(pedido.getId(), "Camila", "camila@correo.com", "3001234567",
                 Facturas.NEGOCIO.tasaIva(), Pedidos.AHORA));
@@ -104,7 +104,7 @@ public class CancelarPedidoUseCaseTest {
     @Test
     void laClientaNoPuedeCancelarUnPedidoConfirmadoNiSeTocaElStock() {
         Pedido pedido = registrarVendiendo(2, 0);
-        pedido.avanzarA(EstadoPedido.CONFIRMADO, ADMIN, Pedidos.AHORA);
+        Pedidos.confirmarPago(pedido, ADMIN);
         pedidos.guardar(pedido);
 
         assertThrows(CancelacionNoPermitidaException.class, () -> useCase.ejecutar(

@@ -7,6 +7,7 @@ import com.example.ecommerce.domain.exception.PedidoNoEncontradoException;
 import com.example.ecommerce.domain.exception.TransicionEstadoInvalidaException;
 import com.example.ecommerce.domain.valueobject.DetallePedido;
 import com.example.ecommerce.domain.valueobject.EstadoPedido;
+import com.example.ecommerce.domain.valueobject.MedioPago;
 import com.example.ecommerce.domain.valueobject.Precio;
 import com.example.ecommerce.domain.valueobject.RolUsuario;
 import com.example.ecommerce.infrastructure.persistence.FacturaRepositoryEnMemoria;
@@ -18,6 +19,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,6 +45,8 @@ public class GestionEstadosPedidoTest {
         pedidos = new PedidoRepositoryEnMemoria();
         clienta = entorno.registrarCliente("camila@correo.com");
         asesora = entorno.crearPersonal("asesora@lovelygirl.com", RolUsuario.ASESORA_VENTAS);
+        // Los pedidos de prueba se registran en Pedidos.AHORA; el pago se confirma después.
+        entorno.reloj.avanzar(Duration.between(entorno.reloj.instant(), Pedidos.AHORA.plusSeconds(3600)));
     }
 
     @Test
@@ -50,7 +55,7 @@ public class GestionEstadosPedidoTest {
         Pedido pedido = registrar();
         var avanzar = avanzar();
 
-        avanzar.ejecutar(pedido.getId(), EstadoPedido.CONFIRMADO, asesora.getId());
+        confirmarPago(pedido);
         VistaPedido vista = new ObtenerPedidoParaGestionUseCase(pedidos, entorno.usuarios).ejecutar(pedido.getId());
 
         assertEquals(EstadoPedido.CONFIRMADO, vista.pedido().getEstado());
@@ -65,7 +70,7 @@ public class GestionEstadosPedidoTest {
         // RF-07.3: dos personas con la misma pantalla abierta
         Pedido pedido = registrar();
         var avanzar = avanzar();
-        avanzar.ejecutar(pedido.getId(), EstadoPedido.CONFIRMADO, asesora.getId());
+        confirmarPago(pedido);
 
         assertThrows(TransicionEstadoInvalidaException.class,
                 () -> avanzar.ejecutar(pedido.getId(), EstadoPedido.CONFIRMADO, asesora.getId()));
@@ -84,8 +89,7 @@ public class GestionEstadosPedidoTest {
         // RF-07.1
         Pedido primero = registrar();
         Pedido segundo = registrar();
-        avanzar()
-                .ejecutar(segundo.getId(), EstadoPedido.CONFIRMADO, asesora.getId());
+        confirmarPago(segundo);
         var listar = new ListarPedidosUseCase(pedidos, entorno.usuarios);
 
         assertEquals(2, listar.ejecutar(Optional.empty(), null).size());
@@ -114,7 +118,7 @@ public class GestionEstadosPedidoTest {
         // RF-08.1 / RF-08.2 / RN15
         Pedido pedido = registrar();
 
-        avanzar().ejecutar(pedido.getId(), EstadoPedido.CONFIRMADO, asesora.getId());
+        confirmarPago(pedido);
         avanzar().ejecutar(pedido.getId(), EstadoPedido.EN_PROCESO, asesora.getId());
 
         assertEquals(1, facturas.cantidad());
@@ -131,6 +135,13 @@ public class GestionEstadosPedidoTest {
         registrar();
 
         assertEquals(0, facturas.cantidad());
+    }
+
+    private void confirmarPago(Pedido pedido) {
+        var emisor = new EmisorFacturas(facturas, entorno.usuarios, Facturas.NEGOCIO, entorno.reloj);
+        new ConfirmarPagoUseCase(pedidos, emisor, entorno.transacciones, entorno.reloj).ejecutar(
+                new ConfirmarPagoUseCase.Solicitud(pedido.getId(), MedioPago.TRANSFERENCIA, "TRX-123456",
+                        pedido.calcularTotal(), LocalDate.of(2026, 10, 16), asesora.getId()));
     }
 
     private AvanzarEstadoPedidoUseCase avanzar() {

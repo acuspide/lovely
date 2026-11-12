@@ -15,6 +15,8 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +64,25 @@ public class PedidoJpaEntity {
 
     @Column(length = 300)
     private String indicaciones;
+
+    /* F-09: pago confirmado por el personal (todas null mientras no se confirme). */
+    @Column(name = "pago_medio", length = 20)
+    private String pagoMedio;
+
+    @Column(name = "pago_referencia", length = 60)
+    private String pagoReferencia;
+
+    @Column(name = "pago_monto", precision = 12, scale = 2)
+    private BigDecimal pagoMonto;
+
+    @Column(name = "pago_fecha_recepcion")
+    private LocalDate pagoFechaRecepcion;
+
+    @Column(name = "pago_confirmado_por")
+    private Long pagoConfirmadoPor;
+
+    @Column(name = "pago_confirmado_en")
+    private LocalDateTime pagoConfirmadoEn;
 
     /*
      * Detalles e historial se cargan con el pedido, pero cada colección en su
@@ -115,6 +136,17 @@ public class PedidoJpaEntity {
         this.historial.addAll(entradasNuevas);
     }
 
+    /** F-09: guarda la confirmación del pago (se registra una sola vez). */
+    public void registrarPago(String medio, String referencia, BigDecimal monto, LocalDate fechaRecepcion,
+                              Long confirmadoPor, LocalDateTime confirmadoEn) {
+        this.pagoMedio = medio;
+        this.pagoReferencia = referencia;
+        this.pagoMonto = monto;
+        this.pagoFechaRecepcion = fechaRecepcion;
+        this.pagoConfirmadoPor = confirmadoPor;
+        this.pagoConfirmadoEn = confirmadoEn;
+    }
+
     public Long getId() { return id; }
     public Long getClienteId() { return clienteId; }
     public String getEstado() { return estado; }
@@ -128,4 +160,10 @@ public class PedidoJpaEntity {
     public String getIndicaciones() { return indicaciones; }
     public List<DetallePedidoJpaEntity> getDetalles() { return detalles; }
     public List<HistorialEstadoPedidoJpaEntity> getHistorial() { return historial; }
+    public String getPagoMedio() { return pagoMedio; }
+    public String getPagoReferencia() { return pagoReferencia; }
+    public BigDecimal getPagoMonto() { return pagoMonto; }
+    public LocalDate getPagoFechaRecepcion() { return pagoFechaRecepcion; }
+    public Long getPagoConfirmadoPor() { return pagoConfirmadoPor; }
+    public LocalDateTime getPagoConfirmadoEn() { return pagoConfirmadoEn; }
 }

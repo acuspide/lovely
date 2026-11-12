@@ -2,6 +2,7 @@ package com.example.ecommerce.infrastructure.web.rest;
 
 import com.example.ecommerce.application.usecase.AvanzarEstadoPedidoUseCase;
 import com.example.ecommerce.application.usecase.CancelarPedidoUseCase;
+import com.example.ecommerce.application.usecase.ConfirmarPagoUseCase;
 import com.example.ecommerce.application.usecase.ConsultarFacturaUseCase;
 import com.example.ecommerce.application.usecase.DescargarFacturaUseCase;
 import com.example.ecommerce.application.usecase.ListarPedidosUseCase;
@@ -11,6 +12,7 @@ import com.example.ecommerce.domain.valueobject.QuienCancela;
 import com.example.ecommerce.infrastructure.security.JwtAuthenticationFilter.UsuarioAutenticado;
 import com.example.ecommerce.infrastructure.web.rest.dto.AvanzarEstadoPedidoRequest;
 import com.example.ecommerce.infrastructure.web.rest.dto.CancelarPedidoRequest;
+import com.example.ecommerce.infrastructure.web.rest.dto.ConfirmarPagoRequest;
 import com.example.ecommerce.infrastructure.web.rest.dto.PedidoGestionResponse;
 import com.example.ecommerce.infrastructure.web.rest.dto.ResumenPedidoGestionResponse;
 import jakarta.validation.Valid;
@@ -37,7 +39,9 @@ import java.util.Optional;
  * <ul>
  *   <li>{@code GET /api/pedidos/gestion?estado=&busqueda=}: lista (RF-07.1).</li>
  *   <li>{@code GET /api/pedidos/gestion/{id}}: detalle con historial (RF-07.2, RF-07.7).</li>
- *   <li>{@code PATCH /api/pedidos/gestion/{id}/estado}: siguiente estado (RF-07.3, RF-07.4).</li>
+ *   <li>{@code POST /api/pedidos/gestion/{id}/pago}: confirmar el pago recibido; el pedido pasa a
+ *       Confirmado y se emite la factura (F-09, RN11).</li>
+ *   <li>{@code PATCH /api/pedidos/gestion/{id}/estado}: siguiente estado desde Confirmado (RF-07.3, RF-07.4).</li>
  *   <li>{@code POST /api/pedidos/gestion/{id}/cancelacion}: cancelar con motivo (RF-07.5, RF-07.6).</li>
  *   <li>{@code GET /api/pedidos/gestion/{id}/factura}: factura en PDF, solo Administradora (RF-08.5).</li>
  * </ul>
@@ -50,6 +54,7 @@ public class GestionPedidosRestController {
     private final ListarPedidosUseCase listarPedidosUseCase;
     private final ObtenerPedidoParaGestionUseCase obtenerPedidoParaGestionUseCase;
     private final AvanzarEstadoPedidoUseCase avanzarEstadoPedidoUseCase;
+    private final ConfirmarPagoUseCase confirmarPagoUseCase;
     private final CancelarPedidoUseCase cancelarPedidoUseCase;
     private final ConsultarFacturaUseCase consultarFacturaUseCase;
     private final DescargarFacturaUseCase descargarFacturaUseCase;
@@ -57,12 +62,14 @@ public class GestionPedidosRestController {
     public GestionPedidosRestController(ListarPedidosUseCase listarPedidosUseCase,
                                         ObtenerPedidoParaGestionUseCase obtenerPedidoParaGestionUseCase,
                                         AvanzarEstadoPedidoUseCase avanzarEstadoPedidoUseCase,
+                                        ConfirmarPagoUseCase confirmarPagoUseCase,
                                         CancelarPedidoUseCase cancelarPedidoUseCase,
                                         ConsultarFacturaUseCase consultarFacturaUseCase,
                                         DescargarFacturaUseCase descargarFacturaUseCase) {
         this.listarPedidosUseCase = listarPedidosUseCase;
         this.obtenerPedidoParaGestionUseCase = obtenerPedidoParaGestionUseCase;
         this.avanzarEstadoPedidoUseCase = avanzarEstadoPedidoUseCase;
+        this.confirmarPagoUseCase = confirmarPagoUseCase;
         this.cancelarPedidoUseCase = cancelarPedidoUseCase;
         this.consultarFacturaUseCase = consultarFacturaUseCase;
         this.descargarFacturaUseCase = descargarFacturaUseCase;
@@ -80,6 +87,16 @@ public class GestionPedidosRestController {
     public PedidoGestionResponse obtener(@PathVariable long id) {
         return PedidoGestionResponse.desde(obtenerPedidoParaGestionUseCase.ejecutar(id),
                 consultarFacturaUseCase.ejecutar(id));
+    }
+
+    /** F-09: la Asesora de ventas o la Administradora confirman que el dinero llegó (RF-09.1). */
+    @PostMapping("/{id}/pago")
+    public PedidoGestionResponse confirmarPago(@AuthenticationPrincipal UsuarioAutenticado usuario,
+                                               @PathVariable long id,
+                                               @Valid @RequestBody ConfirmarPagoRequest request) {
+        confirmarPagoUseCase.ejecutar(new ConfirmarPagoUseCase.Solicitud(id, request.medio(), request.referencia(),
+                request.monto(), request.fechaRecepcion(), usuario.id()));
+        return obtener(id);
     }
 
     @PatchMapping("/{id}/estado")
